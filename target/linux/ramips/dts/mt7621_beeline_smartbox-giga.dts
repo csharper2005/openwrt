@@ -1,0 +1,218 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include "mt7621.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+/ {
+	compatible = "beeline,smartbox-giga", "mediatek,mt7621-soc";
+	model = "Beeline SmartBox GIGA";
+
+	aliases {
+		label-mac-device = &gmac0;
+
+		led-boot = &led_sys_green;
+		led-failsafe = &led_sys_red;
+		led-running = &led_sys_green;
+		led-upgrade = &led_sys_red;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_sys_green: sys_green {
+			label = "green:sys";
+			gpios = <&gpio 13 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_sys_red: sys_red {
+			label = "red:sys";
+			gpios = <&gpio 15 GPIO_ACTIVE_HIGH>;
+		};
+
+		wan_blue {
+			label = "blue:wan";
+			gpios = <&gpio 14 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	keys {
+		compatible = "gpio-keys";
+
+		reset {
+			label = "reset";
+			gpios = <&gpio 4 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+	};
+
+	ubi-concat {
+		compatible = "mtd-concat";
+		devices = <&ubiconcat0 &ubiconcat1 &ubiconcat2 \
+			&ubiconcat3>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "ubi";
+				reg = <0x0 0x5400000>;
+			};
+		};
+	};
+};
+
+&nand {
+	status = "okay";
+
+	partitions {
+		compatible = "sercomm,sc-partitions", "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "u-boot";
+			reg = <0x0 0x100000>;
+			scpart-id = <0>;
+			read-only;
+		};
+
+		partition@100000 {
+			label = "dynamic partition map";
+			reg = <0x100000 0x100000>;
+			scpart-id = <1>;
+		};
+
+		factory: partition@200000 {
+			label = "Factory";
+			reg = <0x200000 0x100000>;
+			scpart-id = <2>;
+			read-only;
+		};
+
+		partition@300000 {
+			label = "Boot Flag";
+			reg = <0x300000 0x100000>;
+			scpart-id = <3>;
+		};
+
+		partition@400000 {
+			label = "kernel";
+			reg = <0x400000 0x600000>;
+			scpart-id = <4>;
+		};
+
+		partition@a00000 {
+			label = "Kernel 2";
+			reg = <0xa00000 0x600000>;
+			scpart-id = <5>;
+			read-only;
+		};
+
+		ubiconcat0: partition@1000000 {
+			label = "File System 1";
+			reg = <0x1000000 0x1800000>;
+			scpart-id = <6>;
+		};
+
+		partition@2800000 {
+			label = "File System 2";
+			reg = <0x2800000 0x1800000>;
+			scpart-id = <7>;
+			read-only;
+		};
+
+		ubiconcat1: partition@4000000 {
+			label = "Configuration/log";
+			reg = <0x4000000 0x800000>;
+			scpart-id = <8>;
+		};
+
+		ubiconcat2: partition@4800000 {
+			label = "application tmp buffer (Ftool)";
+			reg = <0x4800000 0xc00000>;
+			scpart-id = <9>;
+		};
+
+		ubiconcat3: partition@5400000 {
+			label = "container";
+			reg = <0x5400000 0x2800000>;
+			scpart-id = <10>;
+		};
+
+		partition@7c00000 {
+			label = "bad block reserved";
+			reg = <0x7c00000 0x380000>;
+			read-only;
+			scpart-id = <11>;
+		};
+	};
+};
+
+&pcie {
+	status = "okay";
+};
+
+&pcie0 {
+	wifi@0,0 {
+		compatible = "mediatek,mt76";
+		reg = <0x0 0 0 0 0>;
+		mediatek,mtd-eeprom = <&factory 0x8000>;
+		ieee80211-freq-limit = <5000000 6000000>;
+
+		mtd-mac-address = <&factory 0x21000>;
+		mtd-mac-address-increment = <5>;
+	};
+};
+
+&pcie1 {
+	wifi@0,0 {
+		compatible = "mediatek,mt76";
+		reg = <0x0 0 0 0 0>;
+		mediatek,mtd-eeprom = <&factory 0x0>;
+		ieee80211-freq-limit = <2400000 2500000>;
+
+		mtd-mac-address = <&factory 0x21000>;
+		mtd-mac-address-increment = <4>;
+	};
+};
+
+&gmac0 {
+		mtd-mac-address = <&factory 0x21000>;
+};
+
+&switch0 {
+	ports {
+		port@0 {
+			status = "okay";
+			label = "wan";
+
+			mtd-mac-address = <&factory 0x21000>;
+			mtd-mac-address-increment = <1>;
+		};
+
+		port@1 {
+			status = "okay";
+			label = "lan1";
+		};
+
+		port@2 {
+			status = "okay";
+			label = "lan2";
+		};
+	};
+};
+
+&uartlite3 {
+	status = "okay";
+};
+
+&state_default {
+	gpio {
+		groups = "jtag", "uart2", "wdt";
+		function = "gpio";
+	};
+};

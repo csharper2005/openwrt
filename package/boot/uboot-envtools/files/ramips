@@ -18,6 +18,7 @@ alfa-network,awusfree1|\
 alfa-network,quad-e4g|\
 alfa-network,r36m-e4g|\
 alfa-network,tube-e4g|\
+engenius,esr600h)
 engenius,esr600h|\
 sitecom,wlr-4100-v1-002)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x1000" "0x1000"
@@ -27,6 +28,9 @@ allnet,all0256n-8m|\
 allnet,all5002|\
 yuncore,ax820)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x10000" "0x10000"
+	;;
+beeline,smartbox-giga)
+	ubootenv_add_uci_config "/dev/mtd0" "0x80000" "0x1000" "0x20000"
 	;;
 ampedwireless,ally-00x19k|\
 ampedwireless,ally-r1900k)

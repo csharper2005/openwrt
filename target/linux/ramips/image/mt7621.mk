@@ -327,6 +327,26 @@ define Device/asus_rt-n56u-b1
 endef
 TARGET_DEVICES += asus_rt-n56u-b1
 
+define Device/beeline_smartbox-flash
+  $(Device/dsa-migration)
+  $(Device/uimage-lzma-loader)
+  DEVICE_VENDOR := Beeline
+  DEVICE_MODEL := SmartBox Flash
+  IMAGE_SIZE := 55808k
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  KERNEL := kernel-bin | append-dtb | lzma | loader-kernel | uImage none \
+	| pad-to 16805860 | beeline-sb-flash-header
+  IMAGES += kernel.bin rootfs.bin
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  IMAGE/kernel.bin := append-kernel
+  IMAGE/rootfs.bin := append-ubi | check-size
+  DEVICE_PACKAGES := kmod-usb3 kmod-mt7615e kmod-mt7615-firmware \
+	uboot-envtools
+endef
+TARGET_DEVICES += beeline_smartbox-flash
+
 define Device/beeline_smartbox-giga
   $(Device/dsa-migration)
   BLOCKSIZE := 128k
@@ -348,9 +368,9 @@ define Device/beeline_smartbox-giga
   IMAGE/factory.img := append-ubi | beeline-sbgiga-factory kernel rootfs
   SERCOMM_KERNEL_OFFSET := 0x400100
   SERCOMM_ROOTFS_OFFSET := 0x1000000
-  SERCOMM_HWID=444245
-  SERCOMM_HWVER=00010100
-  SERCOMM_SWVER=1001
+  SERCOMM_HWID := 444245
+  SERCOMM_HWVER := 00010100
+  SERCOMM_SWVER := 1001
   DEVICE_VENDOR := Beeline
   DEVICE_MODEL := SmartBox GIGA
   DEVICE_PACKAGES := kmod-mt7603 kmod-mt7615e kmod-mt7663-firmware-ap \
