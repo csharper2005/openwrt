@@ -1,0 +1,158 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include "mt7621.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+/ {
+	compatible = "beeline,smartbox-flash", "mediatek,mt7621-soc";
+	model = "Beeline SmartBox Flash";
+
+	aliases {
+		label-mac-device = &gmac0;
+
+		led-boot = &led_sys_red;
+		led-failsafe = &led_sys_red;
+		led-running = &led_sys_green;
+		led-upgrade = &led_sys_red;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_sys_green: sys_green {
+			label = "green:sys";
+			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
+		};
+
+		led_sys_red: sys_red {
+			label = "red:sys";
+			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
+		};
+
+		wan_blue {
+			label = "blue:wan";
+			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	keys {
+		compatible = "gpio-keys";
+
+		reset {
+			label = "reset";
+			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+	};
+};
+
+&nand {
+	status = "okay";
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "u-boot";
+			reg = <0x0 0x100000>;
+			read-only;
+		};
+
+		partition@100000 {
+			label = "u-boot-env";
+			reg = <0x100000 0x100000>;
+		};
+
+		factory: partition@200000 {
+			label = "Factory";
+			reg = <0x200000 0x100000>;
+			read-only;
+		};
+
+		partition@300000 {
+			label = "kernel";
+			reg = <0x300000 0x2000000>;
+		};
+
+		partition@2300000 {
+			label = "Firmware2";
+			reg = <0x2300000 0x2000000>;
+			read-only;
+		};
+
+		partition@4300000 {
+			label = "glbcfg";
+			reg = <0x4300000 0x200000>;
+			read-only;
+		};
+
+		partition@4500000 {
+			label = "board_data";
+			reg = <0x4500000 0x100000>;
+			read-only;
+		};
+
+		partition@4600000 {
+			label = "glbcfg2";
+			reg = <0x4600000 0x200000>;
+			read-only;
+		};
+
+		partition@4800000 {
+			label = "board_data2";
+			reg = <0x4800000 0x100000>;
+			read-only;
+		};
+
+		partition@4900000 {
+			label = "ubi";
+			reg = <0x4900000 0x3680000>;
+		};
+	};
+};
+
+&pcie {
+	status = "okay";
+};
+
+&pcie0 {
+	wifi@0,0 {
+		compatible = "mediatek,mt76";
+		reg = <0x0000 0 0 0 0>;
+		mediatek,mtd-eeprom = <&factory 0x0>;
+	};
+};
+
+&gmac0 {
+	mtd-mac-address = <&factory 0xfff0>;
+};
+
+&switch0 {
+	ports {
+		port@2 {
+			status = "okay";
+			label = "lan2";
+		};
+
+		port@3 {
+			status = "okay";
+			label = "lan1";
+		};
+
+		port@4 {
+			status = "okay";
+			label = "wan";
+		};
+	};
+};
+
+&state_default {
+	gpio {
+		groups = "jtag", "uart2", "uartlite3", "wdt";
+		function = "gpio";
+	};
+};

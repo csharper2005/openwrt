@@ -9,6 +9,82 @@ DEFAULT_SOC := mt7621
 KERNEL_DTB += -d21
 DEVICE_VARS += ELECOM_HWNAME LINKSYS_HWNAME
 
+define Build/beeline-sb-flash-header
+	echo -ne "$$(echo 000001001c0000000000420000000000 | sed \
+		's/../\\x&/g')" | dd of=$@.tmp bs=1 count=16 \
+		conv=notrunc status=none 2>/dev/null
+	dd if=$@ >> $@.tmp 2>/dev/null
+	mv $@.tmp $@
+	echo -n "hsqs" | dd of=$@ bs=1 seek=$$((0x41fff4)) count=4 \
+		conv=notrunc status=none 2>/dev/null
+	echo -ne "$$(echo 5d436f740070ff00 | sed 's/../\\x&/g')" | dd \
+		of=$@.tmp bs=1 count=8 conv=notrunc status=none \
+		2>/dev/null
+	echo -ne "$$(dd if=$@ bs=16740340 count=1 2>/dev/null | gzip -c \
+		| tail -c 8 | od -An -tx4 -N4 --endian=big | tr -d ' \n' \
+		| awk '{ printf "%8s\n", $$0 }' | tr '0123456789abcdef' \
+		'fedcba9876543210' | sed 's/../\\x&/g')" | dd of=$@.tmp \
+		bs=1 seek=8 count=4 conv=notrunc status=none 2>/dev/null
+	dd if=$@ >> $@.tmp 2>/dev/null
+	mv $@.tmp $@
+	echo -ne "$$(echo 0070ff00 | sed 's/../\\x&/g')" | dd of=$@ bs=1 \
+		seek=$$((0xff7004)) count=4 conv=notrunc status=none \
+		2>/dev/null
+	echo -n "HDR0" | dd of=$@ bs=1 seek=$$((0xff710c)) count=4 \
+		conv=notrunc status=none 2>/dev/null
+endef
+
+define Build/beeline-sbgiga-factory
+	$(eval kernel_tag=$(word 1,$(1)))
+	$(eval rootfs_tag=$(word 2,$(1)))
+	$(TOPDIR)/scripts/sercomm-partition-tag.py \
+		--input-file $@ \
+		--output-file $@.tmp \
+		--part-name $(rootfs_tag) \
+		--part-version $(SERCOMM_SWVER)
+	mv $@.tmp $@
+	dd if=$(IMAGE_KERNEL) >> $@.kernel 2>/dev/null
+	$(TOPDIR)/scripts/sercomm-partition-tag.py \
+		--input-file $@.kernel \
+		--output-file $@.kernel.tmp \
+		--part-name $(kernel_tag) \
+		--part-version $(SERCOMM_SWVER)
+	mv $@.kernel.tmp $@.kernel
+	dd if=$@ >> $@.kernel 2>/dev/null
+	mv $@.kernel $@
+	gzip -f -9n -c $@ > $@.gz
+	mv $@.gz $@
+	dd if=/dev/zero count=$$((0x70)) ibs=1 status=none | tr '\000' \
+		'0' | dd of=$@.pid conv=notrunc 2>/dev/null
+	dd if=/dev/zero count=$$((0x10)) ibs=1 status=none | tr '\000' \
+		'\0' | dd of=$@.pid bs=1 seek=$$((0x70)) conv=notrunc \
+		2>/dev/null
+	echo -n $(SERCOMM_HWVER)$(SERCOMM_HWID) | dd of=$@.pid bs=1 \
+		conv=notrunc 2>/dev/null
+	echo -n $(SERCOMM_SWVER) | dd of=$@.pid bs=1 seek=$$((0x64)) \
+		conv=notrunc 2>/dev/null
+	printf '\x0a' | dd of=$@.pid bs=1 seek=$$((0x70)) conv=notrunc \
+		2>/dev/null
+	$(TOPDIR)/scripts/sercomm-payload.py \
+		--input-file $@ \
+		--output-file $@.tmp \
+		--pid "$$(cat $@.pid | od -t x1 -An -v | tr -d '\n')"
+	mv $@.tmp $@
+	rm $@.pid
+	$(TOPDIR)/scripts/sercomm-crypto.py \
+		--input-file $@ \
+		--key-file $@.key \
+		--output-file $@.ser \
+		--version $(SERCOMM_SWVER)
+	$(STAGING_DIR_HOST)/bin/openssl enc -md md5 -aes-256-cbc \
+		-in $@ -out $@.enc \
+		-K `cat $@.key` \
+		-iv 00000000000000000000000000000000
+	dd if=$@.enc >> $@.ser 2>/dev/null
+	mv $@.ser $@
+	rm -f $@.enc $@.key
+endef
+
 define Build/elecom-wrc-gs-factory
 	$(eval product=$(word 1,$(1)))
 	$(eval version=$(word 2,$(1)))
