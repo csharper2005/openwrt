@@ -56,6 +56,7 @@ platform_do_upgrade() {
 	asus,rt-ax53u|\
 	beeline,smartbox-flash|\
 	beeline,smartbox-giga|\
+	beeline,smartbox-turbo|\
 	dlink,dap-x1860-a1|\
 	dlink,dir-1960-a1|\
 	dlink,dir-2640-a1|\
