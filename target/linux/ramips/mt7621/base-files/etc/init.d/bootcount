@@ -12,6 +12,12 @@ boot() {
 		[[ $(hexdump -n 1 -e '/1 "%1d"' -s $((0x20001)) /dev/mtd3) == \
 			$((0xff)) ]] || printf '\xff' | dd of=/dev/mtdblock3 \
 			count=1 bs=1 seek=$((0x20001))
+	beeline,smartbox-turbo-plus)
+		idx="$(find_mtd_index "Boot Flag")"
+		[ -n "$idx" ] && \
+		[[ $(hexdump -n 1 -e '/1 "%1d"' -s $((0x20001)) /dev/mtd$idx) == \
+			$((0xFF)) ]] || printf '\xFF\xFF' | dd of=/dev/mtdblock$idx \
+			seek=$((0x20001)) count=1 bs=1
 		;;
 	linksys,e5600|\
 	linksys,ea6350-v4|\

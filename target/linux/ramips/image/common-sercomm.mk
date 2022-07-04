@@ -64,6 +64,37 @@ define Build/sercomm-prepend-tagged-kernel
 	mv $(IMAGE_KERNEL).tagged $@
 endef
 
+define Build/sercomm-tag-factory-type-B-turbo-plus
+	$(TOPDIR)/scripts/sercomm-pid.py \
+		--hw-version $(SERCOMM_HWVER) \
+		--hw-id $(SERCOMM_HWID) \
+		--sw-version $(SERCOMM_SWVER) \
+		--pid-file $@.pid
+	dd if=$@.pid of=$@.hdrfactory conv=notrunc 2>/dev/null
+	printf $$(stat -c%s $(IMAGE_KERNEL)) | dd seek=$$((0x70)) of=$@.hdrfactory \
+		bs=1 conv=notrunc 2>/dev/null
+	printf $$(stat -c%s $@) | dd seek=$$((0x80)) of=$@.hdrfactory bs=1 \
+		conv=notrunc 2>/dev/null
+	cat $(IMAGE_KERNEL) $@ | $(MKHASH) md5 | awk '{print $$1}' | \
+		tr -d '\n' | dd seek=$$((0x1e0)) of=$@.hdrfactory bs=1 \
+		conv=notrunc 2>/dev/null
+	$(TOPDIR)/scripts/sercomm-kernel-header.py \
+		--kernel-image $(IMAGE_KERNEL) \
+		--kernel-offset $(SERCOMM_KERNEL_OFFSET) \
+		--rootfs-offset $(SERCOMM_ROOTFS_OFFSET) \
+		--output-header $@.hdrkrn1
+	$(TOPDIR)/scripts/sercomm-kernel-header.py \
+		--kernel-image $(IMAGE_KERNEL) \
+		--kernel-offset 0xA00100 \
+		--rootfs-offset 0x3000000 \
+		--output-header $@.hdrkrn2
+	# Hack CRC for Kernel2
+	dd if=/dev/zero of=$@.hdrkrn2 bs=1 seek=$$((0x18)) count=4 conv=notrunc \
+		2>/dev/null
+	cat $@.hdrfactory $@.hdrkrn1 $@.hdrkrn2 $(IMAGE_KERNEL) $@ > $@.new
+	mv $@.new $@ ; rm -f $@.hdrfactory $@.hdrkrn1 $@.hdrkrn2 $@.pid
+endef
+
 define Device/sercomm_dxx
   $(Device/dsa-migration)
   BLOCKSIZE := 128k
