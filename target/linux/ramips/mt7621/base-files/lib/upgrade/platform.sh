@@ -58,6 +58,7 @@ platform_do_upgrade() {
 	beeline,smartbox-giga|\
 	beeline,smartbox-turbo|\
 	beeline,smartbox-turbo-plus|\
+	beeline,smartbox-pro|\
 	dlink,dap-x1860-a1|\
 	dlink,dir-1960-a1|\
 	dlink,dir-2640-a1|\
@@ -92,6 +93,7 @@ platform_do_upgrade() {
 	raisecom,msg1500-x-00|\
 	sercomm,na502|\
 	sercomm,na502s|\
+	wifire,s1500-nbn|\
 	xiaomi,mi-router-3g|\
 	xiaomi,mi-router-3-pro|\
 	xiaomi,mi-router-4|\
