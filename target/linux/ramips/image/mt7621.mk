@@ -327,7 +327,6 @@ define Device/beeline_smartbox-pro
   SERCOMM_HWID := AWI
   SERCOMM_HWVER := 10000
   SERCOMM_SWVER := 2020
-  IMAGE/factory.img := append-ubi | sercomm-tag-factory-img-pro 0x1700100 0x1f00000 0x1b00100 0x3d00000
   DEVICE_ALT0_VENDOR := Sercomm
   DEVICE_ALT0_MODEL := S1500 AWI
 endef
