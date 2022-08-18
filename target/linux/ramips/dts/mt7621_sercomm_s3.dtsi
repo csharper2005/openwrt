@@ -65,6 +65,10 @@
 		compatible = "mediatek,mt76";
 		reg = <0x0 0 0 0 0>;
 		ieee80211-freq-limit = <5000000 6000000>;
+
+		nvmem-cells = <&macaddr_factory_21000>;
+		nvmem-cell-names = "mac-address";
+		mac-address-increment = <(5)>;
 	};
 };
 
@@ -73,6 +77,10 @@
 		compatible = "mediatek,mt76";
 		reg = <0x0 0 0 0 0>;
 		ieee80211-freq-limit = <2400000 2500000>;
+
+		nvmem-cells = <&macaddr_factory_21000>;
+		nvmem-cell-names = "mac-address";
+		mac-address-increment = <(4)>;
 	};
 };
 
