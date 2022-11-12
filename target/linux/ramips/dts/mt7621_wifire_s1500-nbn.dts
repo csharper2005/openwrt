@@ -47,7 +47,7 @@
 		};
 
 		partition@0 {
-			label = "Bootloader";
+			label = "u-boot";
 			reg = <0x0 0x100000>;
 			read-only;
 		};
@@ -114,7 +114,7 @@
 		 */
 
 		partition@80000 { // U-boot Environment
-			label = "BootLoad-Env";
+			label = "u-boot-env";
 			reg = <0x80000 0x20000>;
 		};
 	};

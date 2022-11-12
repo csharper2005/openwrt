@@ -40,7 +40,7 @@ rostelecom,rt-sf-1)
 	;;
 beeline,smartbox-pro|\
 wifire,s1500-nbn)
-	idx="$(find_mtd_index BootLoad-Env)"
+	idx="$(find_mtd_index u-boot-env)"
 	[ -n "$idx" ] && \
 		ubootenv_add_uci_config "/dev/mtd$idx" "0x0" "0x1000" "0x20000"
 	;;

@@ -41,7 +41,7 @@
 		#size-cells = <1>;
 
 		partition@0 {
-			label = "Boot Loader";
+			label = "u-boot";
 			reg = <0x0 0x100000>;
 			sercomm,scpart-id = <0>;
 			read-only;
