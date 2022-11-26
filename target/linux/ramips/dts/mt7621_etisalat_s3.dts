@@ -3,8 +3,8 @@
 #include "mt7621_sercomm_s3.dtsi"
 
 / {
-	compatible = "beeline,smartbox-turbo-plus", "mediatek,mt7621-soc";
-	model = "Beeline SmartBox TURBO+"; // Sercomm S3 CQR
+	compatible = "etisalat,s3", "mediatek,mt7621-soc";
+	model = "Etisalat S3";
 
 	aliases {
 		label-mac-device = &gmac0;
@@ -112,11 +112,6 @@
 			reg = <0x6400000 0x1b80000>;
 			sercomm,scpart-id = <9>;
 		};
-
-		/*
-		 * 512 KiB Bad Block Table
-		 * 0x8000000-0x7f80000=0x80000
-		 */
 	};
 };
 
@@ -128,7 +123,7 @@
 &gmac1 {
 	nvmem-cells = <&macaddr_factory_21000>;
 	nvmem-cell-names = "mac-address";
-	mac-address-increment = <(1)>;
+	mac-address-increment = <(11)>;
 };
 
 &wlan_2g {
@@ -136,7 +131,7 @@
 
 	nvmem-cells = <&macaddr_factory_21000>;
 	nvmem-cell-names = "mac-address";
-	mac-address-increment = <(4)>;
+	mac-address-increment = <(2)>;
 };
 
 &wlan_5g {
@@ -144,5 +139,5 @@
 
 	nvmem-cells = <&macaddr_factory_21000>;
 	nvmem-cell-names = "mac-address";
-	mac-address-increment = <(5)>;
+	mac-address-increment = <(3)>;
 };
