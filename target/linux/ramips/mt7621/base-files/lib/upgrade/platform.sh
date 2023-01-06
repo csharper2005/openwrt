@@ -95,6 +95,7 @@ platform_do_upgrade() {
 	rostelecom,rt-sf-1|\
 	sercomm,na502|\
 	sercomm,na502s|\
+	tplink,ec330-g5u-v1|\
 	wifire,s1500-nbn|\
 	xiaomi,mi-router-3g|\
 	xiaomi,mi-router-3-pro|\
