@@ -1,0 +1,134 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#include "mt7621_sercomm_s3.dtsi"
+
+/ {
+	compatible = "beeline,smartbox-turbo-plus-small", "mediatek,mt7621-soc";
+	model = "Beeline SmartBox TURBO+ (small layout)"; // Sercomm S3 CQR
+
+	aliases {
+		label-mac-device = &gmac0;
+	};
+};
+
+&uartlite3 { // ZigBee EFR32 MG1B232GG
+	status = "okay";
+	current-speed = <57600>;
+};
+
+&nand {
+	status = "okay";
+
+	partitions {
+		compatible = "sercomm,sc-partitions", "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "u-boot";
+			reg = <0x0 0x100000>;
+			sercomm,scpart-id = <0>;
+			read-only;
+		};
+
+		partition@100000 {
+			label = "dynamic partition map";
+			reg = <0x100000 0x100000>;
+			sercomm,scpart-id = <1>;
+			read-only;
+		};
+
+		factory: partition@200000 {
+			label = "Factory";
+			reg = <0x200000 0x100000>;
+			sercomm,scpart-id = <2>;
+			read-only;
+
+			compatible = "nvmem-cells";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			macaddr_factory_21000: macaddr@21000 {
+				reg = <0x21000 0x6>;
+			};
+		};
+
+		partition@300000 {
+			label = "Boot Flag";
+			reg = <0x300000 0x100000>;
+			sercomm,scpart-id = <3>;
+		};
+
+		partition@400000 {
+			label = "kernel"; // Kernel 1
+			reg = <0x400000 0x600000>;
+			sercomm,scpart-id = <4>;
+		};
+
+		partition@a00000 {
+			label = "Kernel 2";
+			reg = <0xa00000 0x600000>;
+			sercomm,scpart-id = <5>;
+			read-only;
+		};
+
+		partition@1000000 {
+			label = "ubi";
+			reg = <0x1000000 0x2000000>;
+			sercomm,scpart-id = <6>;
+		};
+
+		partition@3000000 {
+			label = "File System 2";
+			reg = <0x3000000 0x2000000>;
+			sercomm,scpart-id = <7>;
+			read-only;
+		};
+
+		partition@5000000 {
+			label = "Configuration/log";
+			reg = <0x5000000 0x1400000>;
+			sercomm,scpart-id = <8>;
+			read-only;
+		};
+
+		partition@6400000 {
+			label = "application tmp buffer (Ftool)";
+			reg = <0x6400000 0x1b80000>;
+			sercomm,scpart-id = <9>;
+			read-only;
+		};
+
+		/*
+		 * 512 KiB Bad Block Table
+		 * 0x8000000-0x7f80000=0x80000
+		 */
+	};
+};
+
+&gmac0 {
+	nvmem-cells = <&macaddr_factory_21000>;
+	nvmem-cell-names = "mac-address";
+};
+
+&gmac1 {
+	nvmem-cells = <&macaddr_factory_21000>;
+	nvmem-cell-names = "mac-address";
+	mac-address-increment = <(1)>;
+};
+
+&wlan_2g {
+	mediatek,mtd-eeprom = <&factory 0x0>;
+
+	nvmem-cells = <&macaddr_factory_21000>;
+	nvmem-cell-names = "mac-address";
+	mac-address-increment = <(4)>;
+};
+
+&wlan_5g {
+	mediatek,mtd-eeprom = <&factory 0x8000>;
+
+	nvmem-cells = <&macaddr_factory_21000>;
+	nvmem-cell-names = "mac-address";
+	mac-address-increment = <(5)>;
+};

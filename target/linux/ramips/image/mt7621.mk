@@ -335,6 +335,19 @@ define Device/beeline_smartbox-turbo-plus
 endef
 TARGET_DEVICES += beeline_smartbox-turbo-plus
 
+define Device/beeline_smartbox-turbo-plus-small
+  $(Device/sercomm_cxx)
+  IMAGE_SIZE := 32768k
+  SERCOMM_HWID := CQR
+  SERCOMM_HWVER := 10000
+  SERCOMM_SWVER := 2010
+  DEVICE_VENDOR := Beeline
+  DEVICE_MODEL := SmartBox TURBO+ (small layout)
+  DEVICE_PACKAGES := kmod-mt7603 kmod-mt7615e kmod-mt7615-firmware \
+	kmod-usb3 uboot-envtools
+endef
+TARGET_DEVICES += beeline_smartbox-turbo-plus-small
+
 define Device/buffalo_wsr-1166dhp
   $(Device/dsa-migration)
   $(Device/uimage-lzma-loader)
