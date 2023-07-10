@@ -11,7 +11,7 @@
 	};
 
 	keys {
-		switch_bt { // "LOW<->HIGH" Switch Button
+		switch_bt {
 			label = "ROUT<->REP Switch_bt";
 			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
 			linux,input-type = <EV_SW>;
@@ -30,7 +30,7 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			partition@0 { // 215936 KiB = 210,875 MiB
+			partition@0 {
 				label = "ubi";
 				reg = <0x0 0xd2e0000>;
 			};
@@ -38,125 +38,81 @@
 	};
 };
 
-&nand {
-	status = "okay";
+&led_wps {
+	label = "blue:wps";
+	color = <LED_COLOR_ID_BLUE>;
+};
 
-	partitions {
+&partitions {
+	partition@0_all {
+		label = "ALL";
+		reg = <0x0 0xff80000>;
+		read-only;
+	};
+
+	partition@200000 {
+		label = "sys_data";
+		reg = <0x200000 0x1400000>;
+
 		compatible = "fixed-partitions";
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		partition@0_all {
-			label = "ALL";
-			reg = <0x0 0xff80000>;
-			read-only;
-		};
-
-		partition@0 {
-			label = "u-boot";
-			reg = <0x0 0x100000>;
-			read-only;
-		};
-
-		factory: partition@100000 {
-			label = "Factory";
-			reg = <0x100000 0x100000>;
-			read-only;
-
-			compatible = "nvmem-cells";
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-			macaddr_factory_1000: macaddr@1000 {
-				reg = <0x1000 0x6>;
-			};
-		};
-
-		partition@200001 {
-			label = "sys_data";
-			reg = <0x200000 0x1400000>;
-			read-only;
-		}; // Uboot saveenv 0x600000 0x20000
-
-		partition@1600000 {
-			label = "boot_flag";
-			reg = <0x1600000 0x100000>;
-		};
-
-		partition@1700000 {
-			label = "kernel"; // Kernel_1
-			reg = <0x1700000 0x400000>;
-		};
-
-		partition@1b00000 {
-			label = "Kernel_2";
-			reg = <0x1b00000 0x400000>;
-			read-only;
-		};
-
-		ubiconcat0: partition@1f00000 {
-			label = "RootFS_1";
-			reg = <0x1f00000 0x1e00000>;
-		};
-
-		partition@3d00000 {
-			label = "RootFS_2";
-			reg = <0x3d00000 0x1e00000>;
-			read-only;
-		};
-
-		ubiconcat1: partition@5b00000 {
-			label = "JVM/OSGI1";
-			reg = <0x5b00000 0x3200000>;
-		};
-
-		ubiconcat2: partition@8d00000 {
-			label = "JVM/OSGI2";
-			reg = <0x8d00000 0x3200000>;
-		};
-
-		ubiconcat3: partition@bf00000 {
-			label = "OSGI data";
-			reg = <0xbf00000 0x3c00000>;
-		};
-
-		ubiconcat4: partition@fb00000 {
-			label = "Ftool";
-			reg = <0xfb00000 0x100000>;
+		ubiconcat5: partition@0 {
+			label = "sys_data_1";
+			reg = <0x0 0x600000>;
 		};
 
 		/*
-		 * 4 MiB for Reserved Bad Block
-		 * 0x10000000-0xfc00000=0x400000
+		 * Sercomm U-Boot saves the environment at 0x800000 from
+		 * the start of the NAND, destroying the "sys_data"
+		 * partition. To prevent this, we split "sys_data" into
+		 * two parts with "u-boot-env" partition between them.
 		 */
-
-		partition@800000 {
+		partition@600000 {
 			label = "u-boot-env";
-			reg = <0x800000 0x20000>;
+			reg = <0x600000 0x20000>;
 		};
 
-		/*
-		 * U-Boot Sercomm saves the environment at 0x800000,
-		 * destroying the sys_data partition. To do this, this section has
-		 * been split to bypass the uboot env area.
-		 */
-
-		ubiconcat5: partition@200000 {
-			label = "sysdata01";
-			reg = <0x200000 0x600000>;
-		};
-
-		ubiconcat6: partition@820000 {
-			label = "sysdata02";
-			reg = <0x820000 0xde0000>;
+		ubiconcat6: partition@620000 {
+			label = "sys_data_2";
+			reg = <0x620000 0xde0000>;
 		};
 	};
-};
 
-&wan {
-	mac-address-increment = <1>;
-};
+	ubiconcat0: partition@1f00000 {
+		label = "RootFS_1";
+		reg = <0x1f00000 0x1e00000>;
+	};
 
-&wlan_5g {
-	mac-address-increment = <2>;
+	partition@3d00000 {
+		label = "RootFS_2";
+		reg = <0x3d00000 0x1e00000>;
+		read-only;
+	};
+
+	ubiconcat1: partition@5b00000 {
+		label = "JVM/OSGI1";
+		reg = <0x5b00000 0x3200000>;
+	};
+
+	ubiconcat2: partition@8d00000 {
+		label = "JVM/OSGI2";
+		reg = <0x8d00000 0x3200000>;
+	};
+
+	ubiconcat3: partition@bf00000 {
+		label = "OSGI data";
+		reg = <0xbf00000 0x3c00000>;
+	};
+
+	ubiconcat4: partition@fb00000 {
+		label = "Ftool";
+		reg = <0xfb00000 0x100000>;
+	};
+
+	/*
+	 * 4 MiB Reserved for the Bad Blocka
+	 * 0x10000000-0xfc00000=0x400000
+	 */
 };

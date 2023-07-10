@@ -294,18 +294,19 @@ endef
 TARGET_DEVICES += beeline_smartbox-giga
 
 define Device/beeline_smartbox-pro
-  $(Device/sercomm_axx)
-  IMAGE_SIZE := 30720k
+  $(Device/sercomm_s1500)
   DEVICE_VENDOR := Beeline
   DEVICE_MODEL := SmartBox PRO
-  SERCOMM_HWID := AWI
-  SERCOMM_HWVER := 10000
-  SERCOMM_SWVER := 2020
   DEVICE_ALT0_VENDOR := Sercomm
   DEVICE_ALT0_MODEL := S1500 AWI
+  IMAGE_SIZE := 34816k
+  IMAGE/factory.img := append-kernel | sercomm-kernel-factory | \
+	sercomm-reset-slot1-chksum | append-ubi | check-size | \
+	sercomm-factory-cqr | sercomm-append-tail | sercomm-mkhash
+  SERCOMM_HWID := AWI
+  SERCOMM_HWVER := 10000
   SERCOMM_ROOTFS2_OFFSET := 0x3d00000
-  IMAGE/factory.img := append-ubi | sercomm-factory-awi
-  DEVICE_PACKAGES := kmod-mt76x2 kmod-usb3 uboot-envtools
+  SERCOMM_SWVER := 2020
 endef
 TARGET_DEVICES += beeline_smartbox-pro
 
@@ -2111,20 +2112,20 @@ endef
 TARGET_DEVICES += wevo_w2914ns-v2
 
 define Device/wifire_s1500-nbn
-  $(Device/sercomm_axx)
+  $(Device/sercomm_s1500)
   DEVICE_VENDOR := WiFire
-  IMAGE_SIZE := 47104k
   DEVICE_MODEL := S1500.NBN
-  SERCOMM_HWVER := 10000
-  SERCOMM_0x10str := 0001
-  SERCOMM_SWVER := 2015
-  SERCOMM_HWID := BUC
-  SERCOMM_ROOTFS2_OFFSET := 0x4d00000
   DEVICE_ALT0_VENDOR := Sercomm
   DEVICE_ALT0_MODEL := S1500 BUC
-  IMAGE/factory.img := append-ubi | sercomm-factory-cqr | \
-	sercomm-pid-set0x10 | sercomm-crypto
-  DEVICE_PACKAGES := kmod-mt76x2 kmod-usb3 uboot-envtools
+  IMAGE_SIZE := 51200k
+  IMAGE/factory.img := append-kernel | sercomm-kernel-factory | \
+	sercomm-reset-slot1-chksum | append-ubi | check-size | \
+	sercomm-factory-cqr | sercomm-fix-buc-pid | sercomm-mkhash | \
+	sercomm-crypto
+  SERCOMM_HWID := BUC
+  SERCOMM_HWVER := 10000
+  SERCOMM_ROOTFS2_OFFSET := 0x4d00000
+  SERCOMM_SWVER := 2015
 endef
 TARGET_DEVICES += wifire_s1500-nbn
 

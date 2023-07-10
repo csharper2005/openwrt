@@ -1,6 +1,11 @@
 DEVICE_VARS += SERCOMM_KERNEL_OFFSET SERCOMM_ROOTFS_OFFSET
 DEVICE_VARS += SERCOMM_KERNEL2_OFFSET SERCOMM_ROOTFS2_OFFSET
-DEVICE_VARS += SERCOMM_0x10str
+
+define Build/sercomm-append-tail
+	printf 16 | dd seek=$$((0x90)) of=$@ bs=1 conv=notrunc 2>/dev/null
+	printf 11223344556677889900112233445566 | \
+		sed 's/../\\x&/g' | xargs -d . printf >> $@
+endef
 
 define Build/sercomm-crypto
 	$(TOPDIR)/scripts/sercomm-crypto.py \
@@ -18,48 +23,23 @@ define Build/sercomm-crypto
 	rm -f $@.enc $@.key
 endef
 
-define Build/sercomm-factory-awi
-	$(call Build/sercomm-kernel-trim,$(IMAGE_KERNEL) \
-		$(IMAGE_KERNEL).data)
-	$(call Build/sercomm-pid,$@.hdrfactory)
-	$(call Build/sercomm-write-pid,$(IMAGE_KERNEL).data $$((0x70)) \
-		$@.hdrfactory)
-	$(call Build/sercomm-write-pid,$@ $$((0x80)) $@.hdrfactory)
-	$(call Build/sercomm-footer,$@.footer)
-	$(call Build/sercomm-write-pid,$@.footer $$((0x90)) $@.hdrfactory)
-	cat $(IMAGE_KERNEL).data $@ $@.footer | $(MKHASH) md5 | \
-		awk '{print $$1}' | tr -d '\n' | dd seek=$$((0x1e0)) \
-		of=$@.hdrfactory bs=1 conv=notrunc 2>/dev/null
-	$(call Build/sercomm-kernel-factory,$(IMAGE_KERNEL).data \
-		$@ $@.hdrkrnl)
-	cat $@.hdrfactory $@.hdrkrnl $(IMAGE_KERNEL).data \
-		$@ $@.footer > $@.new
-	mv $@.new $@
-	rm -f $@.hdrfactory $@.hdrkrnl $(IMAGE_KERNEL).data
-endef
-
 define Build/sercomm-factory-cqr
-	$(call Build/sercomm-kernel-trim,$(IMAGE_KERNEL) \
-		$(IMAGE_KERNEL).data)
-	$(call Build/sercomm-pid,$@.hdrfactory)
-	$(call Build/sercomm-write-pid,$(IMAGE_KERNEL).data $$((0x70)) \
-		$@.hdrfactory)
-	$(call Build/sercomm-write-pid,$@ $$((0x80)) $@.hdrfactory)
-	cat $(IMAGE_KERNEL).data $@ | $(MKHASH) md5 | \
-		awk '{print $$1}' | tr -d '\n' | \
-		dd seek=$$((0x1e0)) of=$@.hdrfactory bs=1 \
-		conv=notrunc 2>/dev/null
-	$(call Build/sercomm-kernel-factory,$(IMAGE_KERNEL).data \
-		$@ $@.hdrkrnl)
-	cat $@.hdrfactory $@.hdrkrnl $(IMAGE_KERNEL).data $@ > $@.new
-	mv $@.new $@
-	rm -f $@.hdrfactory $@.hdrkrnl $(IMAGE_KERNEL).data
+	$(TOPDIR)/scripts/sercomm-pid.py \
+		--hw-version $(SERCOMM_HWVER) \
+		--hw-id $(SERCOMM_HWID) \
+		--sw-version $(SERCOMM_SWVER) \
+		--pid-file $@.fhdr \
+		--extra-padding-size 0x190
+	printf $$(stat -c%s $(IMAGE_KERNEL)) | \
+		dd seek=$$((0x70)) of=$@.fhdr bs=1 conv=notrunc 2>/dev/null
+	printf $$(($$(stat -c%s $@)-$$(stat -c%s $(IMAGE_KERNEL))-$$((0x200)))) | \
+		dd seek=$$((0x80)) of=$@.fhdr bs=1 conv=notrunc 2>/dev/null
+	dd if=$@ >> $@.fhdr 2>/dev/null
+	mv $@.fhdr $@
 endef
 
-define Build/sercomm-footer
-	printf 11223344556677889900112233445566 | sed 's/../\\x&/g' | \
-		xargs -d . printf | \
-		dd of=$(word 1,$(1)) conv=notrunc 2>/dev/null
+define Build/sercomm-fix-buc-pid
+	printf 1 | dd seek=$$((0x13)) of=$@ bs=1 conv=notrunc 2>/dev/null
 endef
 
 define Build/sercomm-kernel
@@ -74,24 +54,24 @@ endef
 
 define Build/sercomm-kernel-factory
 	$(TOPDIR)/scripts/sercomm-kernel-header.py \
-		--kernel-image $(word 1,$(1)) \
+		--kernel-image $@ \
 		--kernel-offset $(SERCOMM_KERNEL_OFFSET) \
 		--rootfs-offset $(SERCOMM_ROOTFS_OFFSET) \
-		--rootfs-image $(word 2,$(1)) \
-		--output-header $(word 1,$(1)).header1
+		--output-header $@.khdr1
 	$(TOPDIR)/scripts/sercomm-kernel-header.py \
-		--kernel-image $(word 1,$(1)) \
+		--kernel-image $@ \
 		--kernel-offset $(SERCOMM_KERNEL2_OFFSET) \
 		--rootfs-offset $(SERCOMM_ROOTFS2_OFFSET) \
-		--rootfs-image $(word 2,$(1)) \
-		--output-header $(word 1,$(1)).header2
-	cat $(word 1,$(1)).header1 $(word 1,$(1)).header2 > $(word 3,$(1))
+		--output-header $@.khdr2
+	cat $@.khdr1 $@.khdr2 > $@.khdr
+	dd if=$@ >> $@.khdr 2>/dev/null
+	mv $@.khdr $@
 endef
 
-define Build/sercomm-kernel-trim
-	dd if=$(word 1,$(1)) bs=512k | \
-		{ dd bs=$$((0x100)) count=1 of=/dev/null; \
-		  dd bs=512k of=$(word 2,$(1)); }
+define Build/sercomm-mkhash
+	dd bs=$$((0x400)) skip=1 if=$@ conv=notrunc 2>/dev/null | \
+		$(MKHASH) md5 | awk '{print $$1}' | tr -d '\n' | \
+		dd seek=$$((0x1e0)) of=$@ bs=1 conv=notrunc 2>/dev/null
 endef
 
 define Build/sercomm-part-tag
@@ -124,19 +104,6 @@ define Build/sercomm-payload
 	rm $@.pid
 endef
 
-define Build/sercomm-pid
-	$(TOPDIR)/scripts/sercomm-pid.py \
-		--hw-version $(SERCOMM_HWVER) \
-		--hw-id $(SERCOMM_HWID) \
-		--sw-version $(SERCOMM_SWVER) \
-		--pid-file $(word 1,$(1))
-endef
-
-define Build/sercomm-pid-set0x10
-	printf $(SERCOMM_0x10str) | dd seek=$$((0x10)) of=$@ bs=1 \
-		conv=notrunc 2>/dev/null
-endef
-
 define Build/sercomm-prepend-tagged-kernel
 	$(CP) $(IMAGE_KERNEL) $(IMAGE_KERNEL).tagged
 	$(call Build/sercomm-part-tag-common,$(word 1,$(1)) \
@@ -145,9 +112,9 @@ define Build/sercomm-prepend-tagged-kernel
 	mv $(IMAGE_KERNEL).tagged $@
 endef
 
-define Build/sercomm-write-pid
-	printf $$(stat -c%s $(word 1,$(1))) | dd seek=$(word 2,$(1)) \
-		of=$(word 3,$(1)) bs=1 conv=notrunc 2>/dev/null
+define Build/sercomm-reset-slot1-chksum
+	printf "\xff\xff\xff\xff" | \
+		dd of=$@ seek=$$((0x118)) bs=1 conv=notrunc 2>/dev/null
 endef
 
 define Device/sercomm
@@ -156,42 +123,53 @@ define Device/sercomm
   PAGESIZE := 2048
   UBINIZE_OPTS := -E 5
   LOADER_TYPE := bin
+  IMAGES += factory.img
+endef
+
+define Device/sercomm_cxx_dxx
+  $(Device/sercomm)
+  KERNEL_SIZE := 6144k
+  KERNEL_LOADADDR := 0x81001000
+  LZMA_TEXT_START := 0x82800000
+  SERCOMM_KERNEL_OFFSET := 0x400100
+  SERCOMM_ROOTFS_OFFSET := 0x1000000
+endef
+
+define Device/sercomm_cxx
+  $(Device/sercomm_cxx_dxx)
+  SERCOMM_KERNEL2_OFFSET := 0xa00100
+  SERCOMM_ROOTFS2_OFFSET := 0x3000000
+  KERNEL := kernel-bin | append-dtb | lzma | loader-kernel | lzma -a0 | \
+	uImage lzma
+  IMAGE/sysupgrade.bin := append-kernel | sercomm-kernel | \
+	sysupgrade-tar kernel=$$$$@ | append-metadata
+  IMAGE/factory.img := append-kernel | sercomm-kernel-factory | \
+	append-ubi | sercomm-factory-cqr | sercomm-mkhash
+endef
+
+define Device/sercomm_dxx
+  $(Device/sercomm_cxx_dxx)
   KERNEL := kernel-bin | append-dtb | lzma | loader-kernel | lzma -a0 | \
 	uImage lzma | sercomm-kernel
   KERNEL_INITRAMFS := kernel-bin | append-dtb | lzma | loader-kernel | \
 	lzma -a0 | uImage lzma
-  IMAGES += factory.img
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  IMAGE/factory.img := append-ubi | check-size | \
+	sercomm-part-tag rootfs | sercomm-prepend-tagged-kernel kernel | \
+	gzip | sercomm-payload | sercomm-crypto
 endef
 
-define Device/sercomm_axx
+define Device/sercomm_s1500
   $(Device/sercomm)
-  KERNEL_SIZE := 4096k
   SERCOMM_KERNEL_OFFSET := 0x1700100
   SERCOMM_ROOTFS_OFFSET := 0x1f00000
   SERCOMM_KERNEL2_OFFSET := 0x1b00100
-endef
-
-define Device/sercomm_cxx
-  $(Device/sercomm)
-  KERNEL_SIZE := 6144k
-  KERNEL_LOADADDR := 0x81001000
-  LZMA_TEXT_START := 0x82800000
-  SERCOMM_KERNEL_OFFSET := 0x400100
-  SERCOMM_ROOTFS_OFFSET := 0x1000000
-  SERCOMM_KERNEL2_OFFSET := 0xa00100
-  SERCOMM_ROOTFS2_OFFSET := 0x3000000
-  IMAGE/factory.img := append-ubi | sercomm-factory-cqr
-endef
-
-define Device/sercomm_dxx
-  $(Device/sercomm)
-  KERNEL_SIZE := 6144k
-  KERNEL_LOADADDR := 0x81001000
-  LZMA_TEXT_START := 0x82800000
-  SERCOMM_KERNEL_OFFSET := 0x400100
-  SERCOMM_ROOTFS_OFFSET := 0x1000000
-  IMAGE/factory.img := append-ubi | sercomm-part-tag rootfs | \
-	sercomm-prepend-tagged-kernel kernel | gzip | sercomm-payload | \
-	sercomm-crypto
+  KERNEL_SIZE := 4096k
+  KERNEL := kernel-bin | append-dtb | lzma | loader-kernel | lzma -a0 | \
+	uImage lzma
+  KERNEL_INITRAMFS := kernel-bin | append-dtb | lzma | loader-kernel | \
+	lzma -a0 | uImage lzma
+  IMAGE/sysupgrade.bin := append-kernel | sercomm-kernel | \
+	sysupgrade-tar kernel=$$$$@ | append-metadata
+  DEVICE_PACKAGES := kmod-mt76x2 kmod-usb3 uboot-envtools
 endef
