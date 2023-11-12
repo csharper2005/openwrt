@@ -2,6 +2,7 @@
 # MT7620A Profiles
 #
 
+include ./common-sercomm.mk
 include ./common-tp-link.mk
 
 DEVICE_VARS += DLINK_ROM_ID DLINK_FAMILY_MEMBER DLINK_FIRMWARE_SIZE DLINK_IMAGE_OFFSET
@@ -1031,6 +1032,20 @@ define Device/ravpower_rp-wd03
 	Upgrade via sysupgrade mechanism is not possible, so new installation via TFTP is required.
 endef
 TARGET_DEVICES += ravpower_rp-wd03
+
+define Device/rostelecom_rt-fl-1
+  $(Device/sercomm_cpj)
+  DEVICE_MODEL := RT-FL-1
+  DEVICE_ALT0_MODEL := RT-FL-1
+endef
+TARGET_DEVICES += rostelecom_rt-fl-1
+
+define Device/rostelecom_s1010
+  $(Device/sercomm_cpj)
+  DEVICE_MODEL := S1010
+  DEVICE_ALT0_MODEL := S1010.RT
+endef
+TARGET_DEVICES += rostelecom_s1010
 
 define Device/sanlinking_d240
   SOC := mt7620a
