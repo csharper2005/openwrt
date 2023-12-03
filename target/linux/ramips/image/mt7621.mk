@@ -789,6 +789,8 @@ define Device/etisalat_s3
   SERCOMM_SWVER := 4009
   DEVICE_VENDOR := Etisalat
   DEVICE_MODEL := S3
+  DEVICE_ALT0_VENDOR := Sercomm
+  DEVICE_ALT0_MODEL := S3
   DEVICE_PACKAGES := kmod-mt7603 kmod-mt7615e kmod-mt7615-firmware \
 	kmod-usb3 uboot-envtools
 endef
