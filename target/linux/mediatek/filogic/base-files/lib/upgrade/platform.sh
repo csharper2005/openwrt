@@ -52,7 +52,15 @@ xiaomi_initial_setup()
 
 	local board=$(board_name)
 	case "$board" in
-	xiaomi,mi-router-ax3000t|\
+	xiaomi,mi-router-ax3000t)
+		fw_setenv -s - <<-EOF
+			flag_last_success 0
+			flag_ota_reboot 0
+			flag_try_sys1_failed 0
+			flag_try_sys2_failed 0
+			mtdparts "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),34816k(ubi),34816k(ubi1),32768k(overlay),12288k(data),256k(KF)"
+		EOF
+		;;
 	xiaomi,mi-router-wr30u-stock)
 		fw_setenv mtdparts "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),34816k(ubi),34816k(ubi1),32768k(overlay),12288k(data),256k(KF)"
 		;;
