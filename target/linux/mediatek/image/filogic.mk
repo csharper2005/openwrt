@@ -143,6 +143,7 @@ define Device/abt_asr3000
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot abt_asr3000
+  DEFAULT := n
 endef
 TARGET_DEVICES += abt_asr3000
 
@@ -160,6 +161,7 @@ define Device/acelink_ew-7886cax
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += acelink_ew-7886cax
 
@@ -175,6 +177,7 @@ define Device/acer_predator-w6
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += acer_predator-w6
 
@@ -190,6 +193,7 @@ define Device/acer_predator-w6d
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += acer_predator-w6d
 
@@ -207,6 +211,7 @@ define Device/acer_predator-w6x
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += acer_predator-w6x
 
@@ -222,6 +227,7 @@ define Device/acer_vero-w6m
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += acer_vero-w6m
 
@@ -240,6 +246,7 @@ define Device/asiarf_ap7986-003
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
+  DEFAULT := n
 endef
 TARGET_DEVICES += asiarf_ap7986-003
 
@@ -255,6 +262,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8612
   DEVICE_DTS := mt7986a-smartrg-SDG-8612
   DEVICE_PACKAGES += kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8612
 
@@ -263,6 +271,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8614
   DEVICE_DTS := mt7986a-smartrg-SDG-8614
   DEVICE_PACKAGES += kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8614
 
@@ -271,6 +280,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8622
   DEVICE_DTS := mt7986a-smartrg-SDG-8622
   DEVICE_PACKAGES += kmod-mt7915e kmod-mt7915-firmware kmod-mt7986-firmware mt7986-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8622
 
@@ -279,6 +289,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8632
   DEVICE_DTS := mt7986a-smartrg-SDG-8632
   DEVICE_PACKAGES += kmod-mt7915e kmod-mt7915-firmware kmod-mt7986-firmware mt7986-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8632
 
@@ -287,6 +298,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8733
   DEVICE_DTS := mt7988a-smartrg-SDG-8733
   DEVICE_PACKAGES += kmod-mt7996-firmware kmod-phy-aquantia kmod-usb3 mt7988-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8733
 
@@ -295,6 +307,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8733A
   DEVICE_DTS := mt7988d-smartrg-SDG-8733A
   DEVICE_PACKAGES += mt7988-2p5g-phy-firmware kmod-mt7996-233-firmware kmod-phy-aquantia mt7988-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8733a
 
@@ -303,6 +316,7 @@ $(call Device/adtran_smartrg)
   DEVICE_MODEL := SDG-8734
   DEVICE_DTS := mt7988a-smartrg-SDG-8734
   DEVICE_PACKAGES += kmod-mt7996-firmware kmod-phy-aquantia kmod-sfp kmod-usb3 mt7988-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += smartrg_sdg-8734
 
@@ -327,6 +341,7 @@ define Device/arcadyan_mozart
   ARTIFACT/emmc-preloader.bin	:= mt7988-bl2 emmc-comb
   ARTIFACT/emmc-bl31-uboot.fip	:= mt7988-bl31-uboot arcadyan_mozart
   SUPPORTED_DEVICES += arcadyan,mozart
+  DEFAULT := n
 endef
 TARGET_DEVICES += arcadyan_mozart
 
@@ -345,6 +360,7 @@ define Device/asus_rt-ax52
   ARTIFACTS := initramfs.trx
   ARTIFACT/initramfs.trx := append-image-stage initramfs-kernel.bin | \
 	uImage none | asus-trx -v 3 -n $$(DEVICE_MODEL)
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_rt-ax52
 
@@ -355,6 +371,7 @@ define Device/asus_rt-ax59u
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_rt-ax59u
 
@@ -371,6 +388,7 @@ define Device/asus_tuf-ax4200
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_tuf-ax4200
 
@@ -387,6 +405,7 @@ define Device/asus_tuf-ax6000
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_tuf-ax6000
 
@@ -407,6 +426,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACTS := factory.bin
   ARTIFACT/factory.bin := append-image initramfs-kernel.bin | uImage lzma
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_zenwifi-bt8
 
@@ -430,9 +450,9 @@ define Device/asus_zenwifi-bt8-ubootmod
   UBOOTENV_IN_UBI := 1
   IMAGES := sysupgrade.itb
   IMAGE/sysupgrade.itb := append-kernel | fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-with-rootfs | pad-rootfs | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_zenwifi-bt8-ubootmod
-
 
 define Device/bananapi_bpi-r3
   DEVICE_VENDOR := Bananapi
@@ -487,6 +507,7 @@ endif
   DEVICE_DTC_FLAGS := --pad 4096
   DEVICE_COMPAT_VERSION := 1.3
   DEVICE_COMPAT_MESSAGE := First sfp port renamed from eth1 to sfp1
+  DEFAULT := n
 endef
 TARGET_DEVICES += bananapi_bpi-r3
 
@@ -532,6 +553,7 @@ endif
 ifneq ($(CONFIG_PACKAGE_airoha-en8811h-firmware),)
   UBINIZE_PARTS += en8811h-fw=:$(STAGING_DIR_IMAGE)/EthMD32.bin
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += bananapi_bpi-r3-mini
 
@@ -584,6 +606,7 @@ define Device/bananapi_bpi-r4
   DEVICE_DTS := mt7988a-bananapi-bpi-r4
   DEVICE_DTS_CONFIG := config-mt7988a-bananapi-bpi-r4
   $(call Device/bananapi_bpi-r4-common)
+  DEFAULT := n
 endef
 TARGET_DEVICES += bananapi_bpi-r4
 
@@ -598,6 +621,7 @@ endif
   $(call Device/bananapi_bpi-r4-common)
   DEVICE_PACKAGES += mt7988-2p5g-phy-firmware
   SUPPORTED_DEVICES += bananapi,bpi-r4-2g5
+  DEFAULT := n
 endef
 TARGET_DEVICES += bananapi_bpi-r4-poe
 
@@ -611,6 +635,7 @@ define Device/buffalo_wsr-6000ax8
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
   IMAGE_SIZE := 26624k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += buffalo_wsr-6000ax8
 
@@ -628,6 +653,7 @@ define Device/cetron_ct3003
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   IMAGES += factory.bin
   IMAGE/factory.bin := $$(IMAGE/sysupgrade.bin) | cetron-header rd30 CT3003
+  DEFAULT := n
 endef
 TARGET_DEVICES += cetron_ct3003
 
@@ -654,6 +680,7 @@ define Device/cmcc_a10-stock
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
   KERNEL_INITRAMFS = kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd
+  DEFAULT := n
 endef
 TARGET_DEVICES += cmcc_a10-stock
 
@@ -683,6 +710,7 @@ define Device/cmcc_a10-ubootmod
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot cmcc_a10
+  DEFAULT := n
 endef
 TARGET_DEVICES += cmcc_a10-ubootmod
 
@@ -750,6 +778,7 @@ define Device/comfast_cf-e393ax
   IMAGES := sysupgrade.bin factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += comfast_cf-e393ax
 
@@ -766,6 +795,7 @@ define Device/confiabits_mt7981
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += confiabits_mt7981
 
@@ -785,6 +815,7 @@ define Device/creatlentem_clt-r30b1-common
   PAGESIZE := 2048
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 
 define Device/creatlentem_clt-r30b1-112m
@@ -821,6 +852,7 @@ define Device/cudy_ap3000outdoor-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_ap3000outdoor-v1
 
@@ -838,6 +870,7 @@ define Device/cudy_ap3000-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_ap3000-v1
 
@@ -860,6 +893,7 @@ define Device/cudy_m3000-v1
   IMAGES := sysupgrade.bin
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_m3000-v1
 
@@ -879,6 +913,7 @@ define Device/cudy_re3000-v1
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := append-kernel | pad-to 128k | append-rootfs | pad-rootfs | check-size | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_re3000-v1
 
@@ -896,6 +931,7 @@ define Device/cudy_tr3000-256mb-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_tr3000-256mb-v1
 
@@ -913,6 +949,7 @@ define Device/cudy_tr3000-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_tr3000-v1
 
@@ -938,6 +975,7 @@ define Device/cudy_tr3000-v1-ubootmod
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 cudy-tr3000-v1
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot cudy_tr3000-v1
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_tr3000-v1-ubootmod
 
@@ -957,6 +995,7 @@ define Device/cudy_wr3000-v1
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := append-kernel | pad-to 128k | append-rootfs | pad-rootfs | check-size | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_wr3000-v1
 
@@ -974,6 +1013,7 @@ define Device/cudy_wr3000e-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_wr3000e-v1
 
@@ -991,6 +1031,7 @@ define Device/cudy_wr3000s-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_wr3000s-v1
 
@@ -1008,6 +1049,7 @@ define Device/cudy_wr3000h-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_wr3000h-v1
 
@@ -1025,6 +1067,7 @@ define Device/cudy_wr3000p-v1
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += cudy_wr3000p-v1
 
@@ -1043,6 +1086,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   IMAGE/recovery.bin := append-image-stage initramfs-kernel.bin | sysupgrade-tar kernel=$$$$@ |\
     pad-to $$(IMAGE_SIZE) | dlink-ai-recovery-header DLK6E6110001 \x6A\x28\xEE\x0B \x00\x00\x2C\x00 \x00\x00\x20\x03 \x61\x6E
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += dlink_aquila-pro-ai-m30-a1
 
@@ -1060,6 +1104,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   IMAGE/recovery.bin := append-image-stage initramfs-kernel.bin | sysupgrade-tar kernel=$$$$@ |\
     pad-to $$(IMAGE_SIZE) | dlink-ai-recovery-header DLK6E8202001 \x30\x6C\x19\x0C \x00\x00\x2C\x00 \x00\x00\x20\x03 \x82\x6E
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += dlink_aquila-pro-ai-m60-a1
 
@@ -1078,6 +1123,7 @@ define Device/edgecore_eap111
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += edgecore_eap111
 
@@ -1091,6 +1137,7 @@ define Device/elecom_wrc-x3000gs3
   IMAGE/factory.bin := sysupgrade-tar | mstc-header 5.04(XZQ.0)b90 COMD | \
 	elecom-product-header WRC-X3000GS3
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += elecom_wrc-x3000gs3
 
@@ -1119,6 +1166,7 @@ define Device/gatonetworks_gdsp
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.itb := append-kernel | fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | pad-rootfs | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += gatonetworks_gdsp
 
@@ -1137,6 +1185,7 @@ define Device/glinet_gl-mt2500
   ARTIFACTS := emmc-preloader.bin emmc-bl31-uboot.fip
   ARTIFACT/emmc-preloader.bin := mt7981-bl2 emmc-ddr4
   ARTIFACT/emmc-bl31-uboot.fip := mt7981-bl31-uboot glinet_gl-mt2500
+  DEFAULT := n
 endef
 TARGET_DEVICES += glinet_gl-mt2500
 
@@ -1151,6 +1200,7 @@ define Device/glinet_gl-mt2500-airoha
   SUPPORTED_DEVICES += glinet,mt2500-emmc glinet,gl-mt2500
   IMAGES := sysupgrade.bin
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-gl-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += glinet_gl-mt2500-airoha
 
@@ -1167,6 +1217,7 @@ define Device/glinet_gl-mt3000
   IMAGE_SIZE := 246272k
   KERNEL_IN_UBI := 1
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-gl-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += glinet_gl-mt3000
 
@@ -1182,6 +1233,7 @@ define Device/glinet_gl-mt6000
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7986-bl2 emmc-ddr4
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot glinet_gl-mt6000
+  DEFAULT := n
 endef
 TARGET_DEVICES += glinet_gl-mt6000
 
@@ -1204,6 +1256,7 @@ define Device/glinet_gl-x3000
   SUPPORTED_DEVICES := glinet,gl-x3000
   $(call Device/glinet_gl-x3000-xe3000-common)
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot glinet_gl-x3000
+  DEFAULT := n
 endef
 TARGET_DEVICES += glinet_gl-x3000
 
@@ -1213,6 +1266,7 @@ define Device/glinet_gl-xe3000
   SUPPORTED_DEVICES := glinet,gl-xe3000
   $(call Device/glinet_gl-x3000-xe3000-common)
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot glinet_gl-xe3000
+  DEFAULT := n
 endef
 TARGET_DEVICES += glinet_gl-xe3000
 
@@ -1238,6 +1292,7 @@ define Device/h3c_magic-nx30-pro
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot h3c_magic-nx30-pro
+  DEFAULT := n
 endef
 TARGET_DEVICES += h3c_magic-nx30-pro
 
@@ -1253,6 +1308,7 @@ define Device/huasifei_wh3000
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += huasifei_wh3000
 
@@ -1266,6 +1322,7 @@ define Device/huasifei_wh3000-pro
   KERNEL_INITRAMFS := kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += huasifei_wh3000-pro
 
@@ -1285,6 +1342,7 @@ define Device/iptime_ax3000q
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
   SUPPORTED_DEVICES += mediatek,mt7981-spim-snand-rfb
+  DEFAULT := n
 endef
 TARGET_DEVICES += iptime_ax3000q
 
@@ -1304,6 +1362,7 @@ define Device/iptime_ax3000sm
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
   SUPPORTED_DEVICES += mediatek,mt7981-spim-snand-rfb
+  DEFAULT := n
 endef
 TARGET_DEVICES += iptime_ax3000sm
 
@@ -1324,6 +1383,7 @@ define Device/iptime_ax3000m
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
   SUPPORTED_DEVICES += mediatek,mt7981-spim-snand-rfb
+  DEFAULT := n
 endef
 TARGET_DEVICES += iptime_ax3000m
 
@@ -1343,6 +1403,7 @@ define Device/iptime_ax7800m-6e
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7916-firmware kmod-mt7986-firmware mt7986-wo-firmware kmod-hwmon-gpiofan
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += iptime_ax7800m-6e
 
@@ -1367,6 +1428,7 @@ define Device/jcg_q30-pro
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot jcg_q30-pro
+  DEFAULT := n
 endef
 TARGET_DEVICES += jcg_q30-pro
 
@@ -1393,6 +1455,7 @@ define Device/jdcloud_re-cp-03
   ARTIFACT/gpt.bin := mt798x-gpt emmc
   ARTIFACT/preloader.bin := mt7986-bl2 emmc-ddr4
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot jdcloud_re-cp-03
+  DEFAULT := n
 endef
 TARGET_DEVICES += jdcloud_re-cp-03
 
@@ -1413,6 +1476,7 @@ define Device/keenetic_kn-3711
   IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | \
 	append-ubi | check-size | zyimage -d 0x803711 -v "KN-3711"
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += keenetic_kn-3711
 
@@ -1433,6 +1497,7 @@ define Device/keenetic_kn-3811
   IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | \
 	append-ubi | check-size | zyimage -d 0x803811 -v "KN-3811"
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += keenetic_kn-3811
 
@@ -1453,6 +1518,7 @@ define Device/keenetic_kn-3911
   IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | \
 	append-ubi | check-size | zyimage -d 0x803911 -v "KN-3911"
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += keenetic_kn-3911
 
@@ -1508,6 +1574,7 @@ define Device/mediatek_mt7981-rfb
 				   pad-to 64M | append-image squashfs-sysupgrade.itb | check-size |\
 				) \
 				  gzip
+  DEFAULT := n
 endef
 TARGET_DEVICES += mediatek_mt7981-rfb
 
@@ -1530,6 +1597,7 @@ define Device/mediatek_mt7986a-rfb-nand
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
   KERNEL_INITRAMFS = kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd
+  DEFAULT := n
 endef
 TARGET_DEVICES += mediatek_mt7986a-rfb-nand
 
@@ -1548,6 +1616,7 @@ define Device/mediatek_mt7986b-rfb
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += mediatek_mt7986b-rfb
 
@@ -1611,6 +1680,7 @@ define Device/mediatek_mt7988a-rfb
 				   pad-to 64M | append-image squashfs-sysupgrade.itb | check-size |\
 				) \
 				  gzip
+  DEFAULT := n
 endef
 TARGET_DEVICES += mediatek_mt7988a-rfb
 
@@ -1625,6 +1695,7 @@ define Device/mercusys_mr80x-v3
   BLOCKSIZE := 128k
   PAGESIZE := 2048
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += mercusys_mr80x-v3
 
@@ -1639,6 +1710,7 @@ define Device/mercusys_mr90x-v1
   PAGESIZE := 2048
   IMAGE_SIZE := 51200k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += mercusys_mr90x-v1
 
@@ -1691,6 +1763,7 @@ define Device/netcore_n60
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7986-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot netcore_n60
+  DEFAULT := n
 endef
 TARGET_DEVICES += netcore_n60
 
@@ -1715,6 +1788,7 @@ define Device/netcore_n60-pro
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7986-bl2 spim-nand-ddr4
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot netcore_n60-pro
+  DEFAULT := n
 endef
 TARGET_DEVICES += netcore_n60-pro
 
@@ -1733,6 +1807,7 @@ define Device/netgear_wax220
   # Padding to 10M seems to be required by OEM web interface
   IMAGE/factory.img := sysupgrade-tar | \
 	  pad-to 10M | check-size | netgear-encrypted-factory
+  DEFAULT := n
 endef
 TARGET_DEVICES += netgear_wax220
 
@@ -1782,6 +1857,7 @@ define Device/nokia_ea0326gmp
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot nokia_ea0326gmp
+  DEFAULT := n
 endef
 TARGET_DEVICES += nokia_ea0326gmp
 
@@ -1795,6 +1871,7 @@ define Device/nradio_c8-668gl
 	kmod-usb3
   IMAGE_SIZE := 131072k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata | check-size
+  DEFAULT := n
 endef
 TARGET_DEVICES += nradio_c8-668gl
 
@@ -1815,6 +1892,7 @@ define Device/openembed_som7981
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += openembed_som7981
 
@@ -1828,6 +1906,7 @@ define Device/openfi_6c
   KERNEL_INITRAMFS := kernel-bin | lzma | \
         fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += openfi_6c
 
@@ -1874,6 +1953,7 @@ define Device/openwrt_one
 		   $(if $(IB),recovery=:$(STAGING_DIR_IMAGE)/mediatek-filogic-openwrt_one-initramfs.itb,\
 			      recovery=:$(KDIR)/tmp/$$(KERNEL_INITRAMFS_IMAGE)) \
 		   $(if $(wildcard $(TOPDIR)/openwrt-mediatek-filogic-openwrt_one-calibration.itb), calibration=:$(TOPDIR)/openwrt-mediatek-filogic-openwrt_one-calibration.itb)
+  DEFAULT := n
 endef
 TARGET_DEVICES += openwrt_one
 
@@ -1898,6 +1978,7 @@ define Device/qihoo_360t7
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot qihoo_360t7
+  DEFAULT := n
 endef
 TARGET_DEVICES += qihoo_360t7
 
@@ -1914,6 +1995,7 @@ define Device/routerich_ax3000
 	upgraded to avoid data corruption and getting bricked. \
 	Please, contact your vendor and follow the guide: \
 	https://openwrt.org/toh/routerich/ax3000#web_ui_method
+  DEFAULT := n
 endef
 TARGET_DEVICES += routerich_ax3000
 
@@ -1951,6 +2033,7 @@ define Device/routerich_ax3000-v1
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware kmod-usb3 mt7981-wo-firmware
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   SUPPORTED_DEVICES += mediatek,mt7981-spim-snand-rfb
+  DEFAULT := n
 endef
 TARGET_DEVICES += routerich_ax3000-v1
 
@@ -1961,6 +2044,7 @@ define Device/ruijie_rg-x60-pro
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += ruijie_rg-x60-pro
 
@@ -1986,6 +2070,7 @@ define Device/snr_snr-cpe-ax2
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot snr_snr-cpe-ax2
+  DEFAULT := n
 endef
 TARGET_DEVICES += snr_snr-cpe-ax2
 
@@ -2004,6 +2089,7 @@ define Device/teltonika_rutc50
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | append-teltonika-metadata
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += teltonika_rutc50
 
@@ -2025,6 +2111,7 @@ define Device/tenbay_wr3000k
         fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
   KERNEL_INITRAMFS = kernel-bin | lzma | \
         fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd
+  DEFAULT := n
 endef
 TARGET_DEVICES += tenbay_wr3000k
 
@@ -2036,6 +2123,7 @@ define Device/totolink_x6000r
   IMAGES := sysupgrade.bin
   IMAGE_SIZE := 14336k
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += totolink_x6000r
 
@@ -2050,6 +2138,7 @@ define Device/tplink_archer-ax80-v1
   PAGESIZE := 2048
   IMAGE_SIZE := 51200k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_archer-ax80-v1
 
@@ -2064,6 +2153,7 @@ define Device/tplink_re6000xd
   PAGESIZE := 2048
   IMAGE_SIZE := 51200k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_re6000xd
 
@@ -2084,6 +2174,7 @@ define Device/tplink_fr365-v1
   IMAGE/factory.ubi := append-ubi | check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := fitblk kmod-sfp kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_fr365-v1
 
@@ -2105,6 +2196,7 @@ define Device/tplink_tl-xdr-common
   DEVICE_PACKAGES := fitblk kmod-usb3 kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7986-bl2 spim-nand-ddr3
+  DEFAULT := n
 endef
 
 define Device/tplink_tl-xdr4288
@@ -2112,6 +2204,7 @@ define Device/tplink_tl-xdr4288
   DEVICE_DTS := mt7986a-tplink-tl-xdr4288
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot tplink_tl-xdr4288
   $(call Device/tplink_tl-xdr-common)
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_tl-xdr4288
 
@@ -2120,6 +2213,7 @@ define Device/tplink_tl-xdr6086
   DEVICE_DTS := mt7986a-tplink-tl-xdr6086
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot tplink_tl-xdr6086
   $(call Device/tplink_tl-xdr-common)
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_tl-xdr6086
 
@@ -2128,6 +2222,7 @@ define Device/tplink_tl-xdr6088
   DEVICE_DTS := mt7986a-tplink-tl-xdr6088
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot tplink_tl-xdr6088
   $(call Device/tplink_tl-xdr-common)
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_tl-xdr6088
 
@@ -2138,6 +2233,7 @@ define Device/tplink_tl-xtr8488
   DEVICE_PACKAGES += kmod-mt7915-firmware
   ARTIFACT/preloader.bin := mt7986-bl2 spim-nand-ddr4
   ARTIFACT/bl31-uboot.fip := mt7986-bl31-uboot tplink_tl-xtr8488
+  DEFAULT := n
 endef
 TARGET_DEVICES += tplink_tl-xtr8488
 
@@ -2148,6 +2244,7 @@ define Device/ubnt_unifi-6-plus
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware e2fsprogs f2fsck mkf2fs fdisk partx-utils
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += ubnt_unifi-6-plus
 
@@ -2157,12 +2254,14 @@ define Device/unielec_u7981-01
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware kmod-usb3 e2fsprogs f2fsck mkf2fs fdisk partx-utils
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 
 define Device/unielec_u7981-01-emmc
   DEVICE_DTS := mt7981b-unielec-u7981-01-emmc
   DEVICE_VARIANT := (EMMC)
   $(call Device/unielec_u7981-01)
+  DEFAULT := n
 endef
 TARGET_DEVICES += unielec_u7981-01-emmc
 
@@ -2170,6 +2269,7 @@ define Device/unielec_u7981-01-nand
   DEVICE_DTS := mt7981b-unielec-u7981-01-nand
   DEVICE_VARIANT := (NAND)
   $(call Device/unielec_u7981-01)
+  DEFAULT := n
 endef
 TARGET_DEVICES += unielec_u7981-01-nand
 
@@ -2188,6 +2288,7 @@ define Device/wavlink_wl-wn551x3
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
   SUPPORTED_DEVICES += mediatek,mt7981-spim-snand-rfb
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += wavlink_wl-wn551x3
 
@@ -2199,6 +2300,7 @@ define Device/wavlink_wl-wn586x3
   DEVICE_DTS_LOADADDR := 0x47000000
   IMAGE_SIZE := 15424k
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += wavlink_wl-wn586x3
 
@@ -2218,6 +2320,7 @@ define Device/wavlink_wl-wn586x3b
   IMAGES := factory.bin initramfs-kernel.bin sysupgrade.bin
   IMAGE/factory.bin := append-ubi | check-size $$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += wavlink_wl-wn586x3b
 
@@ -2236,6 +2339,7 @@ define Device/wavlink_wl-wn573hx3
   SUPPORTED_DEVICES += mediatek,mt7981-spim-nor-rfb
   IMAGES = WN573HX3-sysupgrade.bin
   IMAGE/WN573HX3-sysupgrade.bin := append-kernel | pad-to 128k | append-rootfs | pad-rootfs | check-size | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += wavlink_wl-wn573hx3
 
@@ -2253,6 +2357,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-kernel.bin | ubinize-kernel
 endif
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += xiaomi_mi-router-ax3000t
 
@@ -2298,6 +2403,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-kernel.bin | ubinize-kernel
 endif
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += xiaomi_mi-router-wr30u-stock
 
@@ -2326,6 +2432,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACTS += initramfs-factory.ubi
   ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-recovery.itb | ubinize-kernel
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += xiaomi_mi-router-wr30u-ubootmod
 
@@ -2343,6 +2450,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-kernel.bin | ubinize-kernel
 endif
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += xiaomi_redmi-router-ax6000-stock
 
@@ -2371,6 +2479,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACTS += initramfs-factory.ubi
   ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-recovery.itb | ubinize-kernel
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += xiaomi_redmi-router-ax6000-ubootmod
 
@@ -2389,6 +2498,7 @@ define Device/yuncore_ax835
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   IMAGE/sysupgrade.bin := append-kernel | pad-to 128k | append-rootfs | pad-rootfs | check-size | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += yuncore_ax835
 
@@ -2406,6 +2516,7 @@ define Device/zbtlink_zbt-z8102ax
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += zbtlink_zbt-z8102ax
 
@@ -2423,6 +2534,7 @@ define Device/zbtlink_zbt-z8102ax-v2
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += zbtlink_zbt-z8102ax-v2
 
@@ -2440,6 +2552,7 @@ define Device/zbtlink_zbt-z8103ax
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += zbtlink_zbt-z8103ax
 
@@ -2466,6 +2579,7 @@ define Device/zyxel_ex5601-t0-stock
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
   KERNEL_INITRAMFS = kernel-bin | lzma | \
 	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd
+  DEFAULT := n
 endef
 TARGET_DEVICES += zyxel_ex5601-t0-stock
 
@@ -2499,6 +2613,7 @@ ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
   ARTIFACTS += initramfs-factory.ubi
   ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-recovery.itb | ubinize-kernel
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += zyxel_ex5601-t0-ubootmod
 
@@ -2513,6 +2628,7 @@ define Device/zyxel_ex5700-telenor
   PAGESIZE := 2048
   IMAGE_SIZE := 65536k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += zyxel_ex5700-telenor
 
@@ -2533,5 +2649,6 @@ define Device/zyxel_nwa50ax-pro
   IMAGES += factory.bin
   IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE) | zyxel-nwa-fit-filogic
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += zyxel_nwa50ax-pro
