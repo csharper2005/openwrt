@@ -126,6 +126,7 @@ platform_do_upgrade() {
 	mediatek,mt7981-rfb|\
 	mercusys,mr90x-v1-ubi|\
 	netcore,n60|\
+	netis,nx31|\
 	qihoo,360t7|\
 	routerich,ax3000-ubootmod|\
 	tplink,tl-xdr4288|\
