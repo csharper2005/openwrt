@@ -13,6 +13,7 @@ mediatek_setup_interfaces()
 	h3c,magic-nx30-pro|\
 	netis,nx31|\
 	nokia,ea0326gmp|\
+	routerich,ax3000-v1|\
 	zbtlink,zbt-z8103ax)
 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" eth1
 		;;
