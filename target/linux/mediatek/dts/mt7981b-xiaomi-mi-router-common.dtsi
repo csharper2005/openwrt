@@ -29,8 +29,8 @@
 		button-mesh {
 			label = "mesh";
 			gpios = <&pio 0 GPIO_ACTIVE_LOW>;
-			linux,code = <BTN_9>;
-			linux,input-type = <EV_SW>;
+			/* Reassigned to RF_KILL */
+			linux,code = <KEY_RFKILL>;
 		};
 
 		button-reset {
