@@ -7,7 +7,7 @@
  obj-$(CONFIG_MTD_SPI_NAND) += spinand.o
 --- a/drivers/mtd/nand/spi/core.c
 +++ b/drivers/mtd/nand/spi/core.c
-@@ -761,6 +761,7 @@ static const struct spinand_manufacturer
+@@ -940,6 +940,7 @@ static const struct nand_ops spinand_ops
  static const struct spinand_manufacturer *spinand_manufacturers[] = {
  	&esmt_c8_spinand_manufacturer,
  	&fidelix_spinand_manufacturer,
@@ -164,8 +164,8 @@
 +	.ops = &foresee_spinand_manuf_ops,
 +};
 --- a/include/linux/mtd/spinand.h
-+++ a/include/linux/mtd/spinand.h
-@@ -245,6 +245,7 @@ extern const struct spinand_manufacturer
++++ b/include/linux/mtd/spinand.h
+@@ -263,6 +263,7 @@ struct spinand_manufacturer {
  extern const struct spinand_manufacturer esmt_c8_spinand_manufacturer;
  extern const struct spinand_manufacturer etron_spinand_manufacturer;
  extern const struct spinand_manufacturer fidelix_spinand_manufacturer;
