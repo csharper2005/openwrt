@@ -1,0 +1,29 @@
+--- a/nss_dp_main.c	2025-05-12 23:10:38.000000000 +0800
++++ b/nss_dp_main.c	2025-07-29 22:47:13.691470491 +0800
+@@ -678,17 +678,19 @@
+ 	if(!dp_priv->phy_node) {
+ 		if(of_phy_is_fixed_link(np)) {
+ 			int ret = of_phy_register_fixed_link(np);
+-			if(ret < 0) {
++			if(ret < 0)
+ 				pr_err("%s: fail to register fixed-link: %d\n", np->name, ret);
+-				return -EFAULT;
+-			}
++				/*
++				 * Does nothing: when using phy-mode = "2500base-x", swphy does not
++				 * support speed over 1000
++				 *   swphy: unknown speed
++				 * which still works as long as you don't need an emulated phy
++				 */
++			else
++				dp_priv->phy_node = of_node_get(np);
+ 		}
+-		dp_priv->phy_node = of_node_get(np);
+ 	}
+ 
+-	if(!dp_priv->phy_node)
+-		pr_err("%s: no phy-handle or fixed-link found\n", np->name);
+-
+ 	if (of_property_read_u32(np, "qcom,mactype", &hal_pdata->mactype)) {
+ 		pr_err("%s: error reading mactype\n", np->name);
+ 		return -EFAULT;
