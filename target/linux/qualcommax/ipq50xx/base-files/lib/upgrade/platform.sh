@@ -171,7 +171,8 @@ platform_check_image() {
 
 platform_pre_upgrade() {
 	case "$(board_name)" in
-	xiaomi,ax6000)
+	xiaomi,ax6000|\
+	xiaomi,mi-router-ax3000t-v2)
 		xiaomi_initramfs_prepare
 		;;
 	esac
@@ -211,7 +212,8 @@ platform_do_upgrade() {
 		remove_oem_ubi_volume ubi_rootfs
 		nand_do_upgrade "$1"
 		;;
-	xiaomi,ax6000)
+	xiaomi,ax6000|\
+	xiaomi,mi-router-ax3000t-v2)
 		# Make sure that UART is enabled
 		fw_setenv boot_wait on
 		fw_setenv uart_en 1
