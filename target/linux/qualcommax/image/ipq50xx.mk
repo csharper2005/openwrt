@@ -189,6 +189,32 @@ endif
 endef
 TARGET_DEVICES += xiaomi_ax6000
 
+define Device/xiaomi_mi-router-ax3000t-v2
+	$(call Device/FitImage)
+	$(call Device/UbiFit)
+	DEVICE_VENDOR := Xiaomi
+	DEVICE_MODEL := Mi Router AX3000T
+	DEVICE_VARIANT := v2
+	BLOCKSIZE := 128k
+	PAGESIZE := 2048
+	DEVICE_DTS_CONFIG := config@mp03.3
+	SOC := ipq5018
+	KERNEL_IN_UBI := 1
+	KERNEL_SIZE := 36864k
+	NAND_SIZE := 128m
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
+		ath11k-firmware-qcn6122 \
+		ipq-wifi-xiaomi_mi-router-ax3000t-v2 \
+		ephy-utils mii_mgr netsys_dbg_util regs switch
+ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
+	ARTIFACTS := initramfs-factory.ubi
+	ARTIFACT/initramfs-factory.ubi := \
+		append-image-stage initramfs-uImage.itb | \
+		ubinize-kernel
+endif
+endef
+TARGET_DEVICES += xiaomi_mi-router-ax3000t-v2
+
 define Device/yuncore_ax830
 	$(call Device/FitImage)
 	$(call Device/UbiFit)

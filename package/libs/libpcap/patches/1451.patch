@@ -1,0 +1,39 @@
+From e85d3246e4803753ed961734ce370e94170f8965 Mon Sep 17 00:00:00 2001
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+Date: Mon, 27 Jan 2025 18:26:39 +0200
+Subject: [PATCH] Don't fail on unsupported DSA tag
+
+Up until commit 8f1f6fcbe4b4 ("If we can't allocate a DLT_ list,
+fail."), the iface_dsa_get_proto_info() return code was ignored, but now
+it isn't.
+
+Many DSA tags are in use which libpcap has no idea about:
+https://github.com/the-tcpdump-group/libpcap/issues/1367
+
+Let's keep the behavior as before, i.e. don't give up on these packets,
+even though we don't know what's inside.
+---
+ pcap-linux.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/pcap-linux.c b/pcap-linux.c
+index 8fca8b60b4..b72e46b63e 100644
+--- a/pcap-linux.c
++++ b/pcap-linux.c
+@@ -5482,10 +5482,14 @@ iface_dsa_get_proto_info(const char *device, pcap_t *handle)
+ 		}
+ 	}
+ 
++	/*
++	 * Not an error. We don't know how to decode all DSA tag formats,
++	 * but we shouldn't give up on the packet.
++	 */
+ 	snprintf(handle->errbuf, PCAP_ERRBUF_SIZE,
+-		      "unsupported DSA tag: %s", buf);
++		 "unsupported DSA tag: %s", buf);
+ 
+-	return PCAP_ERROR;
++	return 0;
+ }
+ 
+ /*

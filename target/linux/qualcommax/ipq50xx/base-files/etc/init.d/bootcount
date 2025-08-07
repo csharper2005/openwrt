@@ -11,5 +11,17 @@ boot() {
 	linksys,spnmx56)
 		mtd resetbc s_env || true
 	;;
+	xiaomi,mi-router-ax3000t-v2)
+		. /lib/upgrade/common.sh
+		[ "$(rootfs_type)" = "tmpfs" ] && return 0
+		fw_setenv -s - <<-EOF
+			flag_boot_rootfs 0
+			flag_boot_success 1
+			flag_last_success 0
+			flag_ota_reboot 0
+			flag_try_sys1_failed 0
+			flag_try_sys2_failed 0
+		EOF
+	;;
 	esac
 }

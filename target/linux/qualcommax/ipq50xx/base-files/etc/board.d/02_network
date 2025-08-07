@@ -27,6 +27,9 @@ ipq50xx_setup_interfaces()
 	yuncore,ax850)
 		ucidef_set_interfaces_lan_wan "lan" "wan"
 		;;
+	xiaomi,mi-router-ax3000t-v2)
+		ucidef_set_interfaces_lan_wan "lan2 lan3 lan4" "wan"
+		;;
 	esac
 }
 
