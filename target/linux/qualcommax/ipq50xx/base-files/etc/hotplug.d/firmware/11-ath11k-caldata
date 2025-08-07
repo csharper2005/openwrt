@@ -34,6 +34,9 @@ case "$FIRMWARE" in
 	xiaomi,ax6000)
 		caldata_extract "0:art" 0x1000 0x20000
 		;;
+	xiaomi,mi-router-ax3000t-v2)
+		caldata_extract "0:ART" 0x1000 0x20000
+		;;
 	yuncore,ax830)
 		caldata_extract "0:ART" 0x1000 0x20000
 		label_mac=$(mtd_get_mac_binary 0:ART 0)
@@ -86,6 +89,9 @@ case "$FIRMWARE" in
 		;;
 	xiaomi,ax6000)
 		caldata_extract "0:art" 0x26800 0x20000
+		;;
+	xiaomi,mi-router-ax3000t-v2)
+		caldata_extract "0:ART" 0x26800 0x20000
 		;;
 	esac
 	;;
