@@ -338,6 +338,7 @@ ifeq ($(CONFIG_TARGET_INITRAMFS_FORCE),y)
 	uImage none | asus-trx -v 3 -n TUF-AX4200
 endif
 endif
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_tuf-ax4200q
 
@@ -728,6 +729,7 @@ define Device/creatlentem_clt-r30b1-112m
   IMAGE_SIZE := 114688k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   $(call Device/creatlentem_clt-r30b1-common)
+  DEFAULT := n
 endef
 TARGET_DEVICES += creatlentem_clt-r30b1-112m
 
@@ -737,6 +739,7 @@ define Device/creatlentem_clt-r30b1
   IMAGE_SIZE := 65536k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   $(call Device/creatlentem_clt-r30b1-common)
+  DEFAULT := n
 endef
 TARGET_DEVICES += creatlentem_clt-r30b1
 
@@ -1282,6 +1285,7 @@ define Device/iptime_ax7800m-6e
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7916-firmware kmod-mt7986-firmware mt7986-wo-firmware kmod-hwmon-gpiofan
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += iptime_ax7800m-6e
 
@@ -1404,6 +1408,7 @@ define Device/konka_komi-a31
   ARTIFACTS := preloader.bin bl31-uboot.fip
   ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3
   ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot konka_komi-a31
+  DEFAULT := n
 endef
 TARGET_DEVICES += konka_komi-a31
 
@@ -1882,6 +1887,7 @@ define Device/routerich_ax3000-v1
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware kmod-usb3 mt7981-wo-firmware
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   SUPPORTED_DEVICES += mediatek,mt7981-spim-snand-rfb
+  DEFAULT := n
 endef
 TARGET_DEVICES += routerich_ax3000-v1
 
@@ -1904,6 +1910,7 @@ define Device/totolink_x6000r
   IMAGES := sysupgrade.bin
   IMAGE_SIZE := 14336k
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  DEFAULT := n
 endef
 TARGET_DEVICES += totolink_x6000r
 
@@ -2047,6 +2054,7 @@ define Device/wavlink_wl-wn536ax6-a
   KERNEL_IN_UBI := 1
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7986-firmware mt7986-wo-firmware
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEFAULT := n
 endef
 TARGET_DEVICES += wavlink_wl-wn536ax6-a
 
