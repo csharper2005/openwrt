@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ "${ACTION}" = "add" ] || return
+
+/usr/bin/ucode /usr/share/ucode/wifi/migrate.uc
