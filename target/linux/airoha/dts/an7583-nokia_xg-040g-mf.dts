@@ -1,0 +1,479 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/dts-v1/;
+
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include "an7583.dtsi"
+
+/ {
+	model = "Nokia XG-040G-MF";
+	compatible = "nokia,xg-040g-mf", "airoha,an7583", "airoha,en7583";
+
+	aliases {
+		label-mac-device = &gdm1;
+
+		led-boot = &led_power_green;
+		led-failsafe = &led_power_green;
+		led-running = &led_power_green;
+		led-upgrade = &led_power_green;
+
+		serial0 = &uart1;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlycon nokaslr rodata=off mem=510M";
+		stdout-path = "serial0:115200n8";
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		button-0 {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&an7583_pinctrl 0 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led-0 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WAN;
+			gpios = <&an7583_pinctrl 6 GPIO_ACTIVE_LOW>;
+		};
+
+		led-1 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WAN_ONLINE;
+			gpios = <&an7583_pinctrl 7 GPIO_ACTIVE_LOW>;
+		};
+
+		led_power_green: led-2 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_POWER;
+			gpios = <&an7583_pinctrl 25 GPIO_ACTIVE_LOW>;
+		};
+
+		led-3 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_USB;
+			function-enumerator = <1>;
+			gpios = <&an7583_pinctrl 26 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "usbport";
+			trigger-sources = <&usb_port1>;
+		};
+
+		led-4 {
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_WAN;
+			gpios = <&an7583_pinctrl 27 GPIO_ACTIVE_LOW>;
+			panic-indicator;
+		};
+
+		led-5 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_USB;
+			function-enumerator = <2>;
+			gpios = <&an7583_pinctrl 33 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "usbport";
+			trigger-sources = <&usb_port2>;
+		};
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x2 0x00000000>;
+	};
+
+	reg_3p3v: regulator-3p3v {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-max-microvolt = <3300000>;
+		regulator-min-microvolt = <3300000>;
+		regulator-name = "fixed-3.3V";
+	};
+
+	reg_usb_5v: regulator-usb-5v {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&an7583_pinctrl 30 GPIO_ACTIVE_HIGH>;
+		regulator-boot-on;
+		regulator-max-microvolt = <5000000>;
+		regulator-min-microvolt = <5000000>;
+		regulator-name = "usb-5v";
+	};
+
+	usb-power {
+		compatible = "regulator-output";
+		vout-supply = <&reg_usb_5v>;
+	};
+
+	virtual_flash {
+		compatible = "mtd-concat";
+		devices = <&ubi3 &ubi1 &ubi2 &ubi4 &ubi5>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "ubi";
+				reg = <0x0 0x0>;
+			};
+		};
+	};
+};
+
+&an7583_pinctrl {
+	gpio-ranges = <&an7583_pinctrl 0 2 53>;
+
+	mdio0_pins: mdio0-pins {
+		conf {
+			pins = "mdio_0";
+			output-high;
+		};
+	};
+
+	pcie0_rst_pins: pcie0-rst-pins {
+		conf {
+			pins = "pcie_reset0";
+			drive-open-drain = <1>;
+		};
+	};
+
+	pcie1_rst_pins: pcie1-rst-pins {
+		conf {
+			pins = "pcie_reset1";
+			drive-open-drain = <1>;
+		};
+	};
+
+	gswp1_led0_pins: gswp1-led0-pins {
+		mux {
+			function = "phy1_led0";
+			pins = "gpio1";
+		};
+	};
+
+	gswp2_led0_pins: gswp2-led0-pins {
+		mux {
+			function = "phy2_led0";
+			pins = "gpio2";
+		};
+	};
+
+	gswp3_led0_pins: gswp3-led0-pins {
+		mux {
+			function = "phy3_led0";
+			pins = "gpio3";
+		};
+	};
+
+	gswp4_led0_pins: gswp4-led0-pins {
+		mux {
+			function = "phy4_led0";
+			pins = "gpio4";
+		};
+	};
+};
+
+&snfi {
+	status = "okay";
+};
+
+/*
+ * GigaDevice GD5F2GM7UEYIG
+ */
+&spi_nand {
+	/*
+	 * Change or add this line
+	 */
+	nand-ecc-mode = "none";
+
+	nand-on-flash-bbt;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0_all {
+			label = "all_flash";
+			reg = <0x0 0x10000000>;
+			read-only;
+		};
+
+		partition@0 {
+			label = "bootloader";
+			reg = <0x0 0x80000>;
+			read-only;
+
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0 0x60000>;
+				read-only;
+			};
+
+			partition@60000 {
+				label = "u-boot-env";
+				reg = <0x60000 0x20000>;
+				read-only;
+			};
+		};
+
+		partition@80000 {
+			label = "romfile";
+			reg = <0x80000 0x40000>;
+			read-only;
+		};
+
+		partition@c0000 {
+			label = "kernel";
+			reg = <0xc0000 0x2880000>;
+		};
+
+		ubi1: partition@2940000 {
+			label = "nsb_slave";
+			reg = <0x2940000 0x2880000>;
+		};
+
+		partition@51c0000 {
+			label = "bosa";
+			reg = <0x51c0000 0x40000>;
+			read-only;
+		};
+
+		factory: partition@5200000 {
+			label = "ri";
+			reg = <0x5200000 0x40000>;
+			read-only;
+		};
+
+		partition@5240000 {
+			label = "flag";
+			reg = <0x5240000 0x40000>;
+			read-only;
+		};
+
+		partition@5280000 {
+			label = "flagback";
+			reg = <0x5280000 0x40000>;
+			read-only;
+		};
+
+		ubi2: partition@52c0000 {
+			label = "config";
+			reg = <0x52c0000 0xa00000>;
+		};
+
+		ubi3: partition@5cc0000 {
+			label = "data";
+			reg = <0x5cc0000 0x80e0000>;
+		};
+
+		ubi4: partition@dda0000 {
+			label = "oopsfs";
+			reg = <0xdda0000 0x400000>;
+		};
+
+		partition@e1a0000 {
+			label = "log";
+			reg = <0xe1a0000 0xa00000>;
+
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ubi5: partition@0 {
+				label = "log_truncated";
+				reg = <0x0 0x9c0000>;
+			};
+
+			/*
+			 * Must be excluded from ubi. Otherwise the data
+			 * will be broken after U-Boot 'bootflag swap'
+			 * command call. This command writes bootflag at
+			 * 0xeb60000 (boot_flag_addr).
+			 */
+			partition@9c0000 {
+				label = "bootflag";
+				reg = <0x9c0000 0x40000>;
+				read-only;
+			};
+		};
+
+		partition@eba0000 {
+			label = "reserved_bmt";
+			reg = <0xeba0000 0x1460000>;
+			read-only;
+		};
+	};
+};
+
+&factory {
+	nvmem-layout {
+		compatible = "fixed-layout";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		macaddr_factory_3e: macaddr@3e {
+			compatible = "mac-base";
+			reg = <0x3e 0x6>;
+			#nvmem-cell-cells = <1>;
+		};
+	};
+};
+
+&i2c0 {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
+&npu {
+	status = "okay";
+};
+
+&eth {
+	status = "okay";
+};
+
+&gdm1 {
+	status = "okay";
+
+	nvmem-cell-names = "mac-address";
+	nvmem-cells = <&macaddr_factory_3e (0)>;
+};
+
+&switch {
+	status = "okay";
+};
+
+&gsw_phy1 {
+	status = "disabled";
+};
+
+&gsw_phy2 {
+	pinctrl-names = "gbe-led";
+	pinctrl-0 = <&gswp2_led0_pins>;
+
+	status = "okay";
+};
+
+&gsw_phy2_led0 {
+	status = "okay";
+	color = <LED_COLOR_ID_GREEN>;
+	function = LED_FUNCTION_LAN;
+	active-low;
+};
+
+&gsw_phy3 {
+	pinctrl-names = "gbe-led";
+	pinctrl-0 = <&gswp3_led0_pins>;
+
+	status = "okay";
+};
+
+&gsw_phy3_led0 {
+	status = "okay";
+	color = <LED_COLOR_ID_GREEN>;
+	function = LED_FUNCTION_LAN;
+	active-low;
+};
+
+&gsw_phy4 {
+	pinctrl-names = "gbe-led";
+	pinctrl-0 = <&gswp4_led0_pins>;
+
+	status = "okay";
+};
+
+&gsw_phy4_led0 {
+	status = "okay";
+	color = <LED_COLOR_ID_GREEN>;
+	function = LED_FUNCTION_LAN;
+	active-low;
+};
+
+&gsw_port1 {
+	status = "disabled";
+};
+
+&gsw_port2 {
+	status = "okay";
+};
+
+&gsw_port3 {
+	status = "okay";
+};
+
+&gsw_port4 {
+	status = "okay";
+};
+
+&mdio_0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mdio0_pins>;
+
+	en8811: ethernet-phy@f {
+		reg = <0xf>;
+
+		reset-gpios = <&an7583_pinctrl 34 GPIO_ACTIVE_LOW>;
+		reset-assert-us = <10000>;
+		reset-deassert-us = <20000>;
+
+		leds {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			led-0 {
+				reg = <0>;
+				color = <LED_COLOR_ID_GREEN>;
+				function = LED_FUNCTION_LAN;
+				function-enumerator = <1>;
+				default-state = "keep";
+			};
+		};
+	};
+};
+
+&gdm3 {
+	status = "okay";
+
+	openwrt,netdev-name = "lan1";
+
+	phy-handle = <&en8811>;
+	phy-mode = "2500base-x";
+
+	nvmem-cell-names = "mac-address";
+	nvmem-cells = <&macaddr_factory_3e (0)>;
+};
+
+&usb0 {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	vusb33-supply = <&reg_3p3v>;
+
+	usb_port1: port@1 {
+		reg = <1>;
+		#trigger-source-cells = <0>;
+	};
+
+	usb_port2: port@2 {
+		reg = <2>;
+		#trigger-source-cells = <0>;
+	};
+};
