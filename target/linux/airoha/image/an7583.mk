@@ -23,3 +23,18 @@ define Device/airoha_an7583-evb-emmc
   DEVICE_PACKAGES := kmod-phy-airoha-en8811h kmod-i2c-an7581
 endef
 TARGET_DEVICES += airoha_an7583-evb-emmc
+
+define Device/nokia_xg-040g-mf
+  $(call Device/FitImageLzma)
+  DEVICE_VENDOR := Nokia
+  DEVICE_MODEL := XG-040G-MF
+  DEVICE_DTS := an7583-nokia_xg-040g-mf
+  DEVICE_DTS_CONFIG := config@1
+  KERNEL_LOADADDR := 0x80200000
+  DEVICE_PACKAGES := airoha-an7583-npu-firmware kmod-phy-airoha-en8811h \
+	kmod-regulator-userspace-consumer kmod-usb-ledtrig-usbport \
+	kmod-usb3 ubootenv-tools
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  SOC := an7583
+endef
+TARGET_DEVICES += nokia_xg-040g-mf
