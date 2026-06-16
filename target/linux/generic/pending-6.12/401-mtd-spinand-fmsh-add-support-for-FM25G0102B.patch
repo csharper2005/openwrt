@@ -44,8 +44,8 @@ Changes since v1:
  	#define FM25S01BI3_STATUS_ECC_NO_BITFLIPS	(0 << 4)
  	#define FM25S01BI3_STATUS_ECC_1_3_BITFLIPS	(1 << 4)
 @@ -34,6 +44,67 @@ static SPINAND_OP_VARIANTS(update_cache_
- 		SPINAND_PROG_LOAD_1S_1S_4S_OP(false, 0, NULL, 0),
- 		SPINAND_PROG_LOAD_1S_1S_1S_OP(false, 0, NULL, 0));
+ 		SPINAND_PROG_LOAD_X4(false, 0, NULL, 0),
+ 		SPINAND_PROG_LOAD(false, 0, NULL, 0));
  
 +
 +static int fm25g01b_ooblayout_ecc(struct mtd_info *mtd, int section,
