@@ -69,12 +69,8 @@
 			function = LED_FUNCTION_USB;
 			function-enumerator = <1>;
 			gpios = <&an7583_pinctrl 26 GPIO_ACTIVE_LOW>;
-			/*
-			 * AN7583 SoC doesn't support USB at this time
-			 *
-			 * linux,default-trigger = "usbport";
-			 * trigger-sources = <&usb_port1>;
-			 */
+			linux,default-trigger = "usbport";
+			trigger-sources = <&usb_port1>;
 		};
 
 		led-4 {
@@ -88,12 +84,8 @@
 			function = LED_FUNCTION_USB;
 			function-enumerator = <2>;
 			gpios = <&an7583_pinctrl 33 GPIO_ACTIVE_LOW>;
-			/*
-			 * AN7583 SoC doesn't support USB at this time
-			 *
-			 * linux,default-trigger = "usbport";
-			 * trigger-sources = <&usb_port2>;
-			 */
+			linux,default-trigger = "usbport";
+			trigger-sources = <&usb_port2>;
 		};
 	};
 
@@ -102,34 +94,32 @@
 		reg = <0x0 0x80000000 0x0 0x20000000>;
 	};
 
+	reg_3p3v: regulator-3p3v {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-max-microvolt = <3300000>;
+		regulator-min-microvolt = <3300000>;
+		regulator-name = "fixed-3.3V";
+	};
+
+	reg_usb_5v: regulator-usb-5v {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&an7583_pinctrl 30 GPIO_ACTIVE_HIGH>;
+		regulator-boot-on;
+		regulator-max-microvolt = <5000000>;
+		regulator-min-microvolt = <5000000>;
+		regulator-name = "usb-5v";
+	};
+
 	/*
-	 * reg_3p3v: regulator-3p3v {
-	 * 	compatible = "regulator-fixed";
-	 * 	regulator-always-on;
-	 * 	regulator-boot-on;
-	 * 	regulator-max-microvolt = <3300000>;
-	 * 	regulator-min-microvolt = <3300000>;
-	 *	regulator-name = "fixed-3.3V";
-	 * };
-	 *
-	 * reg_usb_5v: regulator-usb-5v {
-	 * 	compatible = "regulator-fixed";
-	 * 	enable-active-high;
-	 * 	gpio = <&an7583_pinctrl 30 GPIO_ACTIVE_HIGH>;
-	 * 	regulator-boot-on;
-	 * 	regulator-max-microvolt = <5000000>;
-	 * 	regulator-min-microvolt = <5000000>;
-	 * 	regulator-name = "usb-5v";
-	 * };
-	 *
-	 *  *
-	 *  * Controls both USB ports at once
-	 *  *
-	 * usb-power {
-	 * 	compatible = "regulator-output";
-	 * 	vout-supply = <&reg_usb_5v>;
-	 * };
+	 * Controls both USB ports at once
 	 */
+	usb-power {
+		compatible = "regulator-output";
+		vout-supply = <&reg_usb_5v>;
+	};
 
 	virtual_flash {
 		compatible = "mtd-concat";
@@ -503,24 +493,20 @@
 	nvmem-cells = <&macaddr_factory_3e (0)>;
 };
 
-/*
- * AN7583 SoC doesn't support USB at this time
- *
- * &usb0 {
- * 	status = "okay";
- * 	#address-cells = <1>;
- * 	#size-cells = <0>;
- *
- * 	vusb33-supply = <&reg_3p3v>;
- *
- * 	usb_port1: port@1 {
- * 		reg = <1>;
- * 		#trigger-source-cells = <0>;
- * 	};
- *
- * 	usb_port2: port@2 {
- * 		reg = <2>;
- * 		#trigger-source-cells = <0>;
- * 	};
- * };
- */
+&usb0 {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	vusb33-supply = <&reg_3p3v>;
+
+	usb_port1: port@1 {
+		reg = <1>;
+		#trigger-source-cells = <0>;
+	};
+
+	usb_port2: port@2 {
+		reg = <2>;
+		#trigger-source-cells = <0>;
+	};
+};
