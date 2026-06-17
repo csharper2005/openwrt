@@ -16,15 +16,8 @@ platform_check_image() {
 
 	case "$board" in
 	nokia,xg-040g-md)
-		# tar magic `ustar`
-		local magic="$(dd if="$1" bs=1 skip=257 count=5 2>/dev/null)"
-
-		[ "$magic" != "ustar" ] && {
-			echo "Invalid image type."
-			return 1
-		}
-
-		return 0
+		nand_do_platform_check "$board" "$1"
+		return $?
 		;;
 	nokia,xg-040g-md-ubi)
 		fit_check_image "$1"

@@ -50,8 +50,10 @@ define Device/nokia_xg-040g-md-common
   BLOCKSIZE := 128k
   PAGESIZE := 2048
   UBINIZE_OPTS := -E 5
-  DEVICE_PACKAGES := airoha-en7581-npu-firmware kmod-phy-airoha-en8811h \
-	kmod-regulator-userspace-consumer kmod-usb3 uboot-envtools
+  DEVICE_PACKAGES := airoha-en7581-npu-firmware \
+	kmod-gpio-button-hotplug kmod-leds-gpio kmod-phy-airoha-en8811h \
+	kmod-regulator-userspace-consumer kmod-usb3 \
+	kmod-usb-ledtrig-usbport uboot-envtools
 endef
 
 define Device/nokia_xg-040g-md

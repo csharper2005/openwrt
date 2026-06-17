@@ -41,8 +41,8 @@ define Device/nokia_xg-040g-mf
   IMAGE/factory-kernel.bin := append-kernel
   IMAGE/factory-rootfs.bin := append-ubi | check-size
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
-  DEVICE_PACKAGES := kmod-phy-airoha-en8811h \
-	kmod-regulator-userspace-consumer kmod-usb3 \
+  DEVICE_PACKAGES := kmod-phy-airoha-en8811h kmod-gpio-button-hotplug \
+	kmod-leds-gpio kmod-regulator-userspace-consumer kmod-usb3 \
 	kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += nokia_xg-040g-mf
