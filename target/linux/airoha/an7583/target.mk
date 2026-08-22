@@ -6,7 +6,7 @@ KERNELNAME:=Image dtbs
 FEATURES+=pwm
 
 DEFAULT_PACKAGES += \
-	airoha-an7583-npu-firmware kmod-leds-gpio \
+	airoha-an7583-npu-firmware kmod-crypto-hw-eip93 kmod-leds-gpio \
 	kmod-gpio-button-hotplug uboot-envtools
 
 define Target/Description
