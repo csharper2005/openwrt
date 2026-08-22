@@ -1,0 +1,11 @@
+#!/bin/sh
+
+uci set luci.main.mediaurlbase='/luci-static/footstrap'
+uci commit luci
+
+uci set firewall.@defaults[0].flow_offloading=1
+uci set firewall.@defaults[0].flow_offloading_hw=1
+uci commit firewall
+/etc/init.d/firewall restart
+
+exit 0
