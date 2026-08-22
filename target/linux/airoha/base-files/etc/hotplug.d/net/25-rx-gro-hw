@@ -1,0 +1,18 @@
+#!/bin/sh
+
+[ "$ACTION" = "add" ] || exit 0
+command -v ethtool >/dev/null 2>&1 || exit 0
+
+DEV=wan
+[ -e "/sys/class/net/$DEV" ] || exit 0
+
+state=$(ethtool -k "$DEV" 2>/dev/null | sed -n 's/^rx-gro-hw: //p')
+[ "$state" = "off" ] || exit 0
+
+if ethtool -K "$DEV" rx-gro-hw on 2>/dev/null; then
+	logger -t rx-gro-hw "enabled rx-gro-hw on $DEV"
+else
+	logger -t rx-gro-hw "failed to enable rx-gro-hw on $DEV"
+fi
+
+exit 0
