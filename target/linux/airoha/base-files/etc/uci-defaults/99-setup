@@ -1,5 +1,12 @@
 #!/bin/sh
 
+chmod +x /usr/libexec/rpcd/luci.airoha_flowsense
+chmod +x /etc/init.d/npu-jitter
+chmod +x /usr/libexec/npu-jitter-daemon
+/etc/init.d/npu-jitter enable
+/etc/init.d/npu-jitter start
+/etc/init.d/rpcd restart
+
 uci set luci.main.mediaurlbase='/luci-static/footstrap'
 uci commit luci
 
