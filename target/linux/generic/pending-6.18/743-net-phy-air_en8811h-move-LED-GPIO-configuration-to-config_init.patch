@@ -21,25 +21,11 @@ Fixes: 71e79430117d ("net: phy: air_en8811h: Add the Airoha EN8811H PHY driver")
 Link: https://lore.kernel.org/r/20260823130638.1166453-2-sochnev.v.74@gmail.com
 Signed-off-by: Vitaliy Sochnev <sochnev.v.74@gmail.com>
 ---
- drivers/net/phy/air_en8811h.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/phy/air_en8811h.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 --- a/drivers/net/phy/air_en8811h.c
 +++ b/drivers/net/phy/air_en8811h.c
-@@ -957,13 +957,6 @@ static int en8811h_probe(struct phy_devi
- 	if (ret)
- 		return ret;
- 
--	/* Configure led gpio pins as output */
--	ret = air_buckpbus_reg_modify(phydev, EN8811H_GPIO_OUTPUT,
--				      EN8811H_GPIO_OUTPUT_345,
--				      EN8811H_GPIO_OUTPUT_345);
--	if (ret < 0)
--		return ret;
--
- 	return 0;
- }
- 
 @@ -1049,6 +1042,16 @@ static int en8811h_config_init(struct ph
  		return ret;
  	}
