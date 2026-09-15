@@ -40,6 +40,7 @@ define U-Boot/an7581_nokia_xg-040g-md
   BUILD_SUBTARGET:=an7581
   BL2_IMAGE:=an7581-bl2.bin
   BL31_IMAGE:=an7581-bl31.bin
+  DEPENDS:=+trusted-firmware-a-an7581-bl31
 endef
 
 define U-Boot/an7581_rfb
