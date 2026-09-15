@@ -92,10 +92,10 @@ endif
 endef
 
 define Download/atf-airoha
-  SOURCE_DATE:=2026-08-14
-  SOURCE_VERSION:=94892b9e42eb1f6992e60bce904c3ef42ea995c8
-  URL:=https://github.com/Ansuel/atf-airoha.git
-  MIRROR_HASH:=eec896b613b0aa8141f377ab9f6bef794f78ac1aed8be9efcefa927d69488dac
+  SOURCE_DATE:=2026-09-15
+  SOURCE_VERSION:=9dea3c32092fcbc6e8b93fc2d315fdcaea331915
+  URL:=https://github.com/csharper2005/atf-airoha.git
+  MIRROR_HASH:=9155892d2375f1e14182070bd1994d49c6c7c72dbba8ce248a6f63d1c6ca78a2
   PROTO:=git
   FILE:=atf-airoha-$$$$(subst -,.,$$$$(SOURCE_DATE))~$$$$(call version_abbrev,$$$$(SOURCE_VERSION)).tar.zst
   SUBDIR:=atf-airoha
