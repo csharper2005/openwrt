@@ -4,6 +4,178 @@
 
 . /lib/functions.sh
 
+#
+# CPU PLL register map.
+#
+# The kernel never programs the PLL: cpufreq goes through SMC 0x82000301 and
+# BL31 does the work. Driving the PLL from here means reproducing what BL31
+# does, so the layout below mirrors plat/ecnt/en7523/ecnt_cpufreq.c in the
+# Airoha ATF tree. AN7583 and EN7581 differ, which is why overclocking a
+# AN7583 with the EN7581 addresses silently does nothing: the write-protect
+# magic differs, so every subsequent PLL write is ignored.
+#
+# Identical on both SoCs:
+CR_CPU_CLK_GATING=0x1fa201e0	# bit0 ARMPLL, bit1 PLL1, bit2 PLL2
+CR_ACLKEN_DIV=0x1efbe640	# [4:0] = 0x12
+CR_BUS_PLL_DIV=0x1efbe7c0	# [10:9] source select
+CR_PLL_WR_PROTECT=0x1fa20268
+
+CLK_SRC_ARMPLL=1
+CLK_SRC_PLL2=3
+
+# Upper bound for the direct PLL path. This is policy, not a hardware limit:
+# PCW is an 8 bit field, so the register layout allows far more than the
+# silicon will ever lock at. Kept overridable so a characterisation sweep can
+# look for the real ceiling - rpcd never sets it, so the UI keeps the default.
+: "${AIROHA_OC_MAX_MHZ:=1600}"
+
+# Lower bound: below this the clock switch has nothing useful to select. Not
+# overridable - there is no reason to sweep downwards.
+AIROHA_OC_MIN_MHZ=500
+
+# Identify the SoC. The compatible string is authoritative and needs no
+# devmem; the chip id register is a fallback for boards with an unusual DTS.
+airoha_soc() {
+	local compat hir
+
+	compat=$(tr '\0' '\n' < /proc/device-tree/compatible 2>/dev/null)
+	case "$compat" in
+	*airoha,an7583*|*airoha,en7583*) echo "an7583"; return ;;
+	*airoha,an7581*|*airoha,en7581*) echo "en7581"; return ;;
+	esac
+
+	if command -v devmem > /dev/null 2>&1; then
+		hir=$(devmem 0x1fb00064 2>/dev/null)
+		if [ -n "$hir" ]; then
+			case $(( ($hir >> 16) & 0xffff )) in
+			14) echo "en7581"; return ;;	# EN7581_HIR 0x0e
+			16) echo "an7583"; return ;;	# AN7583_HIR 0x10
+			esac
+		fi
+	fi
+
+	echo "unknown"
+}
+
+# Select the per-SoC PLL register map. Fails on an unknown SoC so callers
+# refuse to write anything rather than poke addresses at random.
+soc_pll_regs() {
+	case "$1" in
+	en7581)
+		WT_PROTECT_MAGIC=0x12
+		CR_CPUPLL_SDM_PCW=0x1fa202b4
+		# POSDIV and the CHG bit share one register.
+		CR_CPUPLL_SDM_PCW_CHG=0x1fa202b8
+		CR_CPUPLL_SDM_POSDIV=0x1fa202b8
+		POSDIV_SHIFT=4
+		;;
+	an7583)
+		WT_PROTECT_MAGIC=0x80
+		CR_CPUPLL_SDM_PCW=0x1fa202ac
+		# POSDIV lives in CR_CPUPLL_SDM_SSC_PRD, CHG in its own register.
+		CR_CPUPLL_SDM_PCW_CHG=0x1fa202b0
+		CR_CPUPLL_SDM_POSDIV=0x1fa202b8
+		POSDIV_SHIFT=18
+		;;
+	*)
+		return 1
+		;;
+	esac
+}
+
+# Current ARMPLL frequency in MHz, 0 if it cannot be determined.
+# Mirrors curr_armpll_clk_get(): posdiv 0 -> pcw*50, posdiv 1 -> pcw*25.
+read_armpll_mhz() {
+	local pcw posdiv
+
+	command -v devmem > /dev/null 2>&1 || { echo 0; return; }
+	soc_pll_regs "$1" || { echo 0; return; }
+
+	pcw=$(devmem $CR_CPUPLL_SDM_PCW 2>/dev/null)
+	posdiv=$(devmem $CR_CPUPLL_SDM_POSDIV 2>/dev/null)
+	[ -n "$pcw" ] && [ -n "$posdiv" ] || { echo 0; return; }
+
+	pcw=$(( ($pcw >> 24) & 0xff ))
+	posdiv=$(( ($posdiv >> POSDIV_SHIFT) & 0x7 ))
+
+	case "$posdiv" in
+	0) echo $((pcw * 50)) ;;
+	1) echo $((pcw * 25)) ;;
+	*) echo 0 ;;
+	esac
+}
+
+# Switch the CPU clock mux, mirroring clk_src_switch(). Fails if the mux does
+# not read back as requested - ATF checks this too, and carrying on with a
+# half-switched mux is a good way to hang the board.
+clk_src_switch() {
+	local src="$1" val
+
+	# xtal is always on and has no gate; every other source needs one.
+	if [ "$src" -ne 0 ]; then
+		val=$(devmem $CR_CPU_CLK_GATING)
+		devmem $CR_CPU_CLK_GATING 32 $(printf "0x%08X" $(( $val | (1 << (src - 1)) )))
+	fi
+
+	# L2C SRAM interface and MCU_BIU clock divider.
+	val=$(devmem $CR_ACLKEN_DIV)
+	devmem $CR_ACLKEN_DIV 32 $(printf "0x%08X" $(( ($val & 0xFFFFFFE0) | 0x12 )))
+
+	val=$(devmem $CR_BUS_PLL_DIV)
+	devmem $CR_BUS_PLL_DIV 32 $(printf "0x%08X" $(( ($val & 0xFFFFF9FF) | (src << 9) )))
+
+	val=$(devmem $CR_BUS_PLL_DIV)
+	[ $(( ($val >> 9) & 3 )) -eq "$src" ]
+}
+
+clk_src_gate_off() {
+	local src="$1" val
+
+	val=$(devmem $CR_CPU_CLK_GATING)
+	devmem $CR_CPU_CLK_GATING 32 $(printf "0x%08X" $(( $val & ~(1 << (src - 1)) )))
+}
+
+pll_write_protect() {
+	local val
+
+	val=$(devmem $CR_PLL_WR_PROTECT)
+	case "$1" in
+	off) val=$(( ($val & 0xFFFFFF00) | WT_PROTECT_MAGIC )) ;;
+	on)  val=$(( $val & 0xFFFFFF00 )) ;;
+	*)   return 1 ;;
+	esac
+	devmem $CR_PLL_WR_PROTECT 32 $(printf "0x%08X" $val)
+}
+
+# Program PCW and POSDIV, then toggle the CHG bit so the PLL latches them.
+# EN7581 keeps POSDIV and CHG in one register, so both go out in a single
+# write. AN7583 spreads PCW, POSDIV and CHG over three separate registers.
+configure_armpll() {
+	local soc="$1" pcw="$2" posdiv="$3" val
+
+	val=$(devmem $CR_CPUPLL_SDM_PCW)
+	devmem $CR_CPUPLL_SDM_PCW 32 \
+		$(printf "0x%08X" $(( ($val & 0x00FFFFFF) | (pcw << 24) )))
+
+	if [ "$soc" = "an7583" ]; then
+		val=$(devmem $CR_CPUPLL_SDM_POSDIV)
+		devmem $CR_CPUPLL_SDM_POSDIV 32 \
+			$(printf "0x%08X" $(( ($val & 0xFFE3FFFF) | (posdiv << 18) )))
+
+		val=$(($(devmem $CR_CPUPLL_SDM_PCW_CHG)))
+	else
+		val=$(($(devmem $CR_CPUPLL_SDM_PCW_CHG)))
+		val=$(( ($val & 0xFFFFFF8F) | (posdiv << 4) ))
+	fi
+
+	if [ $(( $val & 1 )) -eq 1 ]; then
+		val=$(( $val & ~1 ))
+	else
+		val=$(( $val | 1 ))
+	fi
+	devmem $CR_CPUPLL_SDM_PCW_CHG 32 $(printf "0x%08X" $val)
+}
+
 get_status() {
 	# === NPU Status ===
 	# Read the actually-loaded NPU firmware path from DTS (firmware-name property).
@@ -81,26 +253,12 @@ get_status() {
 		cpu_avail_governors=$(cat "$cpufreq_path/scaling_available_governors" 2>/dev/null || echo "")
 		cpu_min_freq=$(cat "$cpufreq_path/scaling_min_freq" 2>/dev/null || echo 0)
 		cpu_max_freq=$(cat "$cpufreq_path/scaling_max_freq" 2>/dev/null || echo 0)
-		cpu_avail_freqs=$(cat "$cpufreq_path/scaling_available_frequencies" 2>/dev/null || echo "")
+		cpu_avail_freqs=$(cpufreq_selectable)
 	fi
 
-	# Read actual PLL frequency from hardware (detects overclock)
-	local pll_freq=0
-	if command -v devmem > /dev/null 2>&1; then
-		local pcw_raw=$(devmem 0x1fa202b4 2>/dev/null)
-		local chg_raw=$(devmem 0x1fa202b8 2>/dev/null)
-		if [ -n "$pcw_raw" ] && [ -n "$chg_raw" ]; then
-			pcw_raw=$((pcw_raw))
-			chg_raw=$((chg_raw))
-			local pcw_int=$(( (pcw_raw >> 24) & 0x7F ))
-			local pll_posdiv=$(( (chg_raw >> 4) & 7 ))
-			if [ "$pll_posdiv" -eq 0 ]; then
-				pll_freq=$((pcw_int * 50))
-			else
-				pll_freq=$((pcw_int * 50 / (1 << pll_posdiv)))
-			fi
-		fi
-	fi
+	# Read the actual PLL frequency from hardware (detects overclock).
+	local soc=$(airoha_soc)
+	local pll_freq=$(read_armpll_mhz "$soc")
 
 	# Count online CPUs
 	local cpu_count=0
@@ -108,9 +266,10 @@ get_status() {
 		cpu_count=$(ls -d /sys/devices/system/cpu/cpu[0-9]* 2>/dev/null | wc -l)
 	fi
 
-	printf '{"npu_version":"%s","npu_loaded":%s,"npu_device":"%s","npu_clock":%d,"npu_cores":%d,"offload_bound":%d,"offload_total":%d,"memory_regions":%s,"cpu_cur_freq":%d,"cpu_hw_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s","cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_count":%d,"pll_freq_mhz":%d}' \
+	printf '{"npu_version":"%s","npu_loaded":%s,"npu_device":"%s","npu_clock":%d,"npu_cores":%d,"offload_bound":%d,"offload_total":%d,"memory_regions":%s,"cpu_cur_freq":%d,"cpu_hw_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s","cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_count":%d,"pll_freq_mhz":%d,"soc":"%s","oc_min_mhz":%d,"oc_max_mhz":%d}' \
 		"${npu_ver:-Unknown}" "$npu_loaded" "${npu_device:-}" "${npu_clock:-0}" "${npu_cores:-0}" "${offload_bound:-0}" "${offload_total:-0}" "$regions" \
-		"${cpu_cur_freq:-0}" "${cpu_hw_freq:-0}" "${cpu_governor:-unknown}" "${cpu_avail_governors:-}" "${cpu_min_freq:-0}" "${cpu_max_freq:-0}" "${cpu_avail_freqs:-}" "${cpu_count:-0}" "${pll_freq:-0}"
+		"${cpu_cur_freq:-0}" "${cpu_hw_freq:-0}" "${cpu_governor:-unknown}" "${cpu_avail_governors:-}" "${cpu_min_freq:-0}" "${cpu_max_freq:-0}" "${cpu_avail_freqs:-}" "${cpu_count:-0}" "${pll_freq:-0}" "${soc:-unknown}" \
+		"$AIROHA_OC_MIN_MHZ" "$AIROHA_OC_MAX_MHZ"
 }
 
 get_ppe_entries() {
@@ -259,6 +418,25 @@ set_governor() {
 	fi
 }
 
+# Every frequency the policy will currently accept in scaling_max_freq.
+# Boost steps live in their own file and are absent from
+# scaling_available_frequencies, so a board whose max sits on one - AN7583
+# with the 1500-1600 MHz steps, for instance - otherwise reports a current
+# value that is in no list, which leaves the picker with nothing to select
+# and makes the value impossible to set again. They only count while the
+# boost knob is on; with it off the kernel refuses them.
+cpufreq_selectable() {
+	local path=/sys/devices/system/cpu/cpufreq/policy0
+	local freqs
+
+	freqs=$(cat "$path/scaling_available_frequencies" 2>/dev/null)
+	if [ "$(cat /sys/devices/system/cpu/cpufreq/boost 2>/dev/null)" = "1" ]; then
+		freqs="$freqs $(cat "$path/scaling_boost_frequencies" 2>/dev/null)"
+	fi
+
+	echo "$freqs"
+}
+
 set_max_freq() {
 	local freq
 	freq=$(echo "$1" | jsonfilter -e "@.freq" 2>/dev/null)
@@ -269,7 +447,7 @@ set_max_freq() {
 	fi
 
 	# Validate freq is in available list
-	local avail=$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies 2>/dev/null)
+	local avail=$(cpufreq_selectable)
 	if ! echo "$avail" | grep -qw "$freq"; then
 		printf '{"error":"invalid frequency: %s"}' "$freq"
 		return
@@ -284,7 +462,8 @@ set_max_freq() {
 }
 
 set_overclock() {
-	local target_mhz
+	local target_mhz soc posdiv pcw_int actual
+
 	target_mhz=$(echo "$1" | jsonfilter -e "@.freq_mhz" 2>/dev/null)
 
 	if [ -z "$target_mhz" ]; then
@@ -292,9 +471,10 @@ set_overclock() {
 		return
 	fi
 
-	# Validate range (500-1600, crash likely above 1500 at stock voltage)
-	if [ "$target_mhz" -lt 500 ] || [ "$target_mhz" -gt 1600 ]; then
-		echo '{"error":"frequency must be 500-1600 MHz"}'
+	# There is no voltage control on this hardware - the AVS path in BL31 is
+	# compiled out - so everything above stock runs at stock voltage.
+	if [ "$target_mhz" -lt "$AIROHA_OC_MIN_MHZ" ] || [ "$target_mhz" -gt "$AIROHA_OC_MAX_MHZ" ]; then
+		printf '{"error":"frequency must be %d-%d MHz"}' "$AIROHA_OC_MIN_MHZ" "$AIROHA_OC_MAX_MHZ"
 		return
 	fi
 
@@ -303,8 +483,13 @@ set_overclock() {
 		return
 	fi
 
-	# Calculate PCW and posdiv
-	local posdiv pcw_int
+	soc=$(airoha_soc)
+	if ! soc_pll_regs "$soc"; then
+		printf '{"error":"unsupported SoC: %s"}' "$soc"
+		return
+	fi
+
+	# Same split as cpu_freq_config_posdiv[] in ATF.
 	if [ "$target_mhz" -lt 1000 ]; then
 		posdiv=1
 		pcw_int=$((target_mhz / 25))
@@ -313,74 +498,38 @@ set_overclock() {
 		pcw_int=$((target_mhz / 50))
 	fi
 
-	# Lock governor to performance to prevent cpufreq from fighting
+	# Lock the governor to performance. Any set_performance_state - a governor
+	# change, or thermal throttling at the 95C trip - makes BL31 reprogram the
+	# PLL back to one of its own table entries and silently undo this.
 	echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor 2>/dev/null
 
-	# Read current register values
-	local cur_clkmux=$(($(devmem 0x1fa201e0)))
-	local cur_pcw=$(($(devmem 0x1fa202b4)))
-	local cur_chg=$(($(devmem 0x1fa202b8)))
-
-	# Step 1: Enable PLL2 path in CLK_MUX (set bit 2)
-	devmem 0x1fa201e0 32 $(printf "0x%08X" $((cur_clkmux | 0x4)))
-
-	# Step 2: MCUCFG switch to PLL2 (sel=3 in bits[10:9])
-	local cur_u=$(($(devmem 0x1efbe640)))
-	devmem 0x1efbe640 32 $(printf "0x%08X" $(((cur_u & 0xFFFFFFE0) | 0x12)))
-	local cur_s=$(($(devmem 0x1efbe7c0)))
-	devmem 0x1efbe7c0 32 $(printf "0x%08X" $(((cur_s & 0xFFFFF9FF) | (3 << 9))))
-
-	# Step 3: Unlock PLL registers
-	local cur_p=$(($(devmem 0x1fa20268)))
-	devmem 0x1fa20268 32 $(printf "0x%08X" $(((cur_p & 0xFFFFFF00) | 0x12)))
-
-	# Step 4: Write new PCW integer
-	devmem 0x1fa202b4 32 $(printf "0x%08X" $(((cur_pcw & 0x00FFFFFF) | (pcw_int << 24))))
-
-	# Step 5: Write posdiv and toggle CHG bit
-	local chg_bit=$((cur_chg & 1))
-	local cleared=$((cur_chg & 0xFFFFFF8E))
-	if [ "$chg_bit" -eq 1 ]; then
-		devmem 0x1fa202b8 32 $(printf "0x%08X" $((cleared | (posdiv << 4))))
-	else
-		devmem 0x1fa202b8 32 $(printf "0x%08X" $((cleared | (posdiv << 4) | 1)))
+	# From here on the order follows en7523_armpll_set().
+	if ! clk_src_switch $CLK_SRC_PLL2; then
+		clk_src_gate_off $CLK_SRC_PLL2
+		echo '{"error":"failed to switch cpu clock to pll2"}'
+		return
 	fi
 
-	# Step 6: Wait for PLL lock
-	sleep 0.02
+	pll_write_protect off
+	configure_armpll "$soc" "$pcw_int" "$posdiv"
 
-	# Step 7: Enable ARMPLL path in CLK_MUX (set bit 0)
-	local cur_clkmux2=$(($(devmem 0x1fa201e0)))
-	devmem 0x1fa201e0 32 $(printf "0x%08X" $((cur_clkmux2 | 0x1)))
+	# ATF waits 0.5 us before switching back.
+	sleep 0.02 2>/dev/null || sleep 1
 
-	# Step 8: MCUCFG switch back to ARMPLL
-	local cur_u2=$(($(devmem 0x1efbe640)))
-	devmem 0x1efbe640 32 $(printf "0x%08X" $(((cur_u2 & 0xFFFFFFE0) | 0x12)))
-	local cur_s2=$(($(devmem 0x1efbe7c0)))
-	devmem 0x1efbe7c0 32 $(printf "0x%08X" $(((cur_s2 & 0xFFFFF9FF) | (1 << 9))))
-
-	# Step 9: Clear PLL2 path in CLK_MUX
-	local cur_clkmux3=$(($(devmem 0x1fa201e0)))
-	devmem 0x1fa201e0 32 $(printf "0x%08X" $((cur_clkmux3 & 0xFFFFFFFB)))
-
-	# Step 10: Re-lock PLL registers
-	local cur_p2=$(($(devmem 0x1fa20268)))
-	devmem 0x1fa20268 32 $(printf "0x%08X" $((cur_p2 & 0xFFFFFF00)))
-
-	# Verify
-	local final_pcw=$(($(devmem 0x1fa202b4)))
-	local final_chg=$(($(devmem 0x1fa202b8)))
-	local read_pcw=$(( (final_pcw >> 24) & 0x7F ))
-	local read_posdiv=$(( (final_chg >> 4) & 7 ))
-	local read_freq
-	if [ "$read_posdiv" -eq 0 ]; then
-		read_freq=$((read_pcw * 50))
-	else
-		read_freq=$((read_pcw * 50 / (1 << read_posdiv)))
+	if ! clk_src_switch $CLK_SRC_ARMPLL; then
+		pll_write_protect on
+		echo '{"error":"failed to switch cpu clock back to armpll"}'
+		return
 	fi
 
-	printf '{"result":"ok","target_mhz":%d,"actual_mhz":%d,"pcw":%d,"posdiv":%d}' \
-		"$target_mhz" "$read_freq" "$read_pcw" "$read_posdiv"
+	clk_src_gate_off $CLK_SRC_PLL2
+	pll_write_protect on
+
+	# Verify against the registers rather than trusting the writes.
+	actual=$(read_armpll_mhz "$soc")
+
+	printf '{"result":"ok","soc":"%s","target_mhz":%d,"actual_mhz":%d,"pcw":%d,"posdiv":%d}' \
+		"$soc" "$target_mhz" "$actual" "$pcw_int" "$posdiv"
 }
 
 get_frame_engine() {
