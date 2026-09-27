@@ -90,6 +90,32 @@ define Device/airoha_an7581-evb-emmc-kite
 endef
 TARGET_DEVICES += airoha_an7581-evb-emmc-kite
 
+define Device/fiberhome_hg5585f-cu
+  $(call Device/FitImageLzma)
+  DEVICE_VENDOR := FiberHome
+  DEVICE_MODEL := HG5585F
+  DEVICE_VARIANT := (China Unicom)
+  DEVICE_DTS := fsl61167-fiberhome-hg5585f-cu
+  DEVICE_DTS_CONFIG := config@1
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  UBINIZE_OPTS := -E 5
+  KERNEL_IN_UBI := 1
+  KERNEL := kernel-bin | gzip
+  KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+  IMAGES := sysupgrade.itb
+  KERNEL_INITRAMFS := kernel-bin | lzma | \
+	fit lzma $$(KDIR)/image-$$(DEVICE_DTS).dtb with-initrd | pad-to 128k
+  IMAGE/sysupgrade.itb := append-kernel | \
+	fit gzip $$(KDIR)/image-$$(DEVICE_DTS).dtb external-static-with-rootfs | \
+	append-metadata
+  DEVICE_PACKAGES := fitblk kmod-gpio-button-hotplug kmod-leds-gpio \
+	kmod-mt7915e kmod-mt7916-firmware kmod-phy-airoha-en8811h \
+	kmod-regulator-userspace-consumer kmod-usb-ledtrig-usbport \
+	kmod-usb3 wpad-mbedtls
+endef
+TARGET_DEVICES += fiberhome_hg5585f-cu
+
 define Device/gemtek_w1700k-ubi
   DEVICE_VENDOR := Gemtek
   DEVICE_MODEL := W1700K

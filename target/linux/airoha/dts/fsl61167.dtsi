@@ -3,6 +3,8 @@
 #include "an7581.dtsi"
 
 &{/soc} {
+	/delete-node/ spi@1fa10000;
+
 	pnand: nand-controller@1fa11000 {
 		compatible = "airoha,en7581-nfc";
 		reg = <0x0 0x1fa11000 0x0 0x580>;
