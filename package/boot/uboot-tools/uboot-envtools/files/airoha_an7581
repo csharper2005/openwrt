@@ -14,7 +14,8 @@ board=$(board_name)
 case "$board" in
 fiberhome,hg5585f-cu|\
 gemtek,w1700k-ubi|\
-nokia,xg-040g-md-ubi)
+nokia,xg-040g-md-ubi|\
+unionman,ung00a-ubi)
 	ubootenv_add_ubi_default
 	;;
 nokia,xg-040g-md)

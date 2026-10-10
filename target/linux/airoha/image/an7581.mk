@@ -46,6 +46,61 @@ define Build/an7581-chainloader
   cat $(STAGING_DIR_IMAGE)/an7581_$1-chainload-u-boot.itb >> $@
 endef
 
+define Build/append-ubootenv-ung00a
+  printf "%s\n" \
+	"arch=arm" \
+	"baudrate=115200" \
+	"board=en7523_evb" \
+	"board_args=0cffffff:00000000" \
+	"board_name=en7523_evb" \
+	"bootcmd=flash read 0xc0000 0x800000; bootm" \
+	"bootdelay=6" \
+	"bootfile=tclinux.bin" \
+	"console=ttyS0,115200n8 earlycon" \
+	"country_code=ff" \
+	"cpu=armv7" \
+	"dram_limit=512M" \
+	"dsl_gpio=12" \
+	"ethact=ecnt_eth" \
+	"ethaddr=12:34:56:78:9a:bc" \
+	"ether_gpio=0c" \
+	"fdt_high=0xac000000" \
+	"internet_gpio=14" \
+	"invaild_env=no" \
+	"ipaddr=192.168.1.1" \
+	"kernel_filename=tclinux.bin" \
+	"loadaddr=0x81800000" \
+	"multi_upgrade_gpio=18141213000000000000000000000000" \
+	"onu_type=62" \
+	"password=nE7jA%5m" \
+	"power_gpio=11" \
+	"product_name=xPON ONU" \
+	"qdma_init=20b9" \
+	"root=/dev/mtdblock3 ro" \
+	"sdram_conf=0x00108893" \
+	"serdes_ethernet=12" \
+	"serdes_pon=00" \
+	"serdes_usb1=00" \
+	"serdes_usb2=00" \
+	"serdes_wifi1=01" \
+	"serdes_wifi2=01" \
+	"serverip=192.168.1.126" \
+	"snmp_sysobjid=1.2.3.4.5" \
+	"soc=en7523" \
+	"stderr=serial" \
+	"stdin=serial" \
+	"stdout=serial" \
+	"uboot_filename=tcboot.bin" \
+	"um_factory=0" \
+	"username=telecomadmin" \
+	"vendor=ecnt" \
+	"vendor_name=ECONET Technologies Corp." > $@.env.txt
+  $(STAGING_DIR_HOST)/bin/mkenvimage \
+	-s 0x4000 -p 0x0 -o $@.env.bin $@.env.txt
+  cat $@.env.bin >> $@
+  rm -f $@.env.txt $@.env.bin
+endef
+
 define Device/FitImageLzma
 	KERNEL_SUFFIX := -uImage.itb
 	KERNEL = kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(DEVICE_DTS).dtb
@@ -223,3 +278,35 @@ define Device/quantum_q1000k-ubi
   SOC := an7581
 endef
 TARGET_DEVICES += quantum_q1000k-ubi
+
+define Device/unionman_ung00a-ubi
+  $(call Device/FitImageLzma)
+  DEVICE_VENDOR := Unionman
+  DEVICE_MODEL := UNG00A
+  DEVICE_VARIANT := (UBI)
+  DEVICE_ALT0_VENDOR := Jiulian
+  DEVICE_ALT0_MODEL := UNG00A
+  DEVICE_ALT0_VARIANT := (UBI)
+  DEVICE_DTS := an7581-unionman-ung00a-ubi
+  DEVICE_DTS_CONFIG := config-1
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  UBOOTENV_IN_UBI := 1
+  KERNEL_IN_UBI := 1
+  KERNEL := kernel-bin | gzip
+  KERNEL_INITRAMFS = kernel-bin | lzma | \
+	fit lzma $$(KDIR)/image-$$(DEVICE_DTS).dtb with-initrd | pad-to 128k
+  KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+  IMAGES := sysupgrade.itb ubootenv-factory.bin
+  IMAGE/sysupgrade.itb = append-kernel | \
+	fit gzip $$(KDIR)/image-$$(DEVICE_DTS).dtb external-static-with-rootfs | \
+	append-metadata
+  IMAGE/ubootenv-factory.bin = append-ubootenv-ung00a
+  DEVICE_PACKAGES := fitblk kmod-gpio-button-hotplug kmod-leds-gpio \
+	kmod-phy-airoha-en8811h
+  ARTIFACT/bl31-uboot.fip := an7581-bl31-uboot unionman_ung00a
+  ARTIFACT/bl31-uboot-factory.itb := an7581-chainloader unionman_ung00a-factory
+  ARTIFACT/preloader.bin := an7581-preloader unionman_ung00a
+  ARTIFACTS := bl31-uboot.fip bl31-uboot-factory.itb preloader.bin
+endef
+TARGET_DEVICES += unionman_ung00a-ubi

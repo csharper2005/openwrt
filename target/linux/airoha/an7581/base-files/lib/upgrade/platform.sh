@@ -21,7 +21,8 @@ platform_check_image() {
 		;;
 	fiberhome,hg5585f-cu|\
 	nokia,xg-040g-md-ubi|\
-	quantum,q1000k-ubi)
+	quantum,q1000k-ubi|\
+	unionman,ung00a-ubi)
 		fit_check_image "$1"
 		return $?
 		;;
@@ -37,7 +38,8 @@ platform_do_upgrade() {
 		fiberhome,hg5585f-cu|\
 		gemtek,w1700k-ubi|\
 		nokia,xg-040g-md-ubi|\
-		quantum,q1000k-ubi)
+		quantum,q1000k-ubi|\
+		unionman,ung00a-ubi)
 			fit_do_upgrade "$1"
 			;;
 		*)
