@@ -123,6 +123,29 @@ define Device/airoha_an7581-evb-multievb
 endef
 TARGET_DEVICES += airoha_an7581-evb-multievb
 
+define Device/fiberhome_hg5382a
+  $(call Device/FitImageLzma)
+  DEVICE_VENDOR := FiberHome
+  DEVICE_MODEL := HG5382A
+  DEVICE_DTS := fsl61167-fiberhome-hg5382a
+  DEVICE_DTS_CONFIG := config@1
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  UBINIZE_OPTS := -E 5
+  KERNEL_IN_UBI := 1
+  KERNEL := kernel-bin | gzip
+  KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+  IMAGES := sysupgrade.itb
+  KERNEL_INITRAMFS := kernel-bin | lzma | \
+	fit lzma $$(KDIR)/image-$$(DEVICE_DTS).dtb with-initrd | pad-to 128k
+  IMAGE/sysupgrade.itb := append-kernel | \
+	fit gzip $$(KDIR)/image-$$(DEVICE_DTS).dtb external-static-with-rootfs | \
+	append-metadata
+  DEVICE_PACKAGES := fitblk kmod-gpio-button-hotplug kmod-leds-gpio \
+	kmod-phy-maxlinear
+endef
+TARGET_DEVICES += fiberhome_hg5382a
+
 define Device/fiberhome_hg5585f-cu
   $(call Device/FitImageLzma)
   DEVICE_VENDOR := FiberHome
