@@ -63,6 +63,7 @@ CONFIG_PACKAGE_kmod-tcp-bbr=y
 # CONFIG_SIGN_EACH_PACKAGE is not set
 # CONFIG_SIGN_FIRMWARE is not set
 # CONFIG_PACKAGE_kmod-ipt-rtpengine is not set
+# CONFIG_PACKAGE_kmod-pf-ring is not set
 CONFIG_KERNEL_DEVMEM=y
 CONFIG_BUSYBOX_CUSTOM=y
 CONFIG_BUSYBOX_CONFIG_DEVMEM=y
