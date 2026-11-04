@@ -15,6 +15,7 @@ case "$board" in
 fiberhome,hg5382a|\
 fiberhome,hg5585f-cu|\
 gemtek,w1700k-ubi|\
+gemtek,xr1710g-ubi|\
 nokia,xg-040g-md-ubi|\
 unionman,ung00a-ubi)
 	ubootenv_add_ubi_default
