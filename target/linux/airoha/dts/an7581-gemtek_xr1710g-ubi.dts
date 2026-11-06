@@ -109,6 +109,14 @@
 	power-domains = <&cpu_pll>;
 };
 
+&cpu_thermal {
+	polling-delay-passive = <1000>;
+};
+
+&cpu_hot {
+	type = "passive";
+};
+
 &en7581_pinctrl {
 	/* The lan3/lan4 LEDs are driven by the internal switch PHYs */
 	gswp1_led0_pins: gswp1-led0-pins {
