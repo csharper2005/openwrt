@@ -1,0 +1,299 @@
+From: Vitaliy Sochnev <sochnev.v.74@gmail.com>
+Subject: [PATCH] pmdomain: airoha: support direct EN7581 CPU PLL control
+
+The factory BL31 on the Gemtek XR1710G has an older AVS service without
+GET_FREQ or FREQ_DYN_ADJ. Its zero frequency result prevents cpufreq-dt
+from registering. Add an explicit MMIO compatible for these systems;
+keep the existing SMC path unchanged for all other compatibles.
+
+Retain the stock voltage and require an initial 1200 MHz ARMPLL clock.
+Only the existing 500..1200 MHz OPP range is supported. Stop all CPUs
+while one CPU switches to the 400 MHz backup and reconfigures ARMPLL.
+Verify register writes and roll back on failure; keep the backup clock
+running if ARMPLL cannot be restored. Refuse transitions during CPU
+hotplug rather than recursively taking its write-side lock.
+
+The MMIO compatible uses performance states 1..15 for 500..1200 MHz;
+state zero is reserved for an inactive genpd request and maps to 500 MHz.
+
+The register layout and switching sequence are documented in
+plat/ecnt/en7523/ecnt_cpufreq.c from Ansuel/atf-airoha, revision
+705478c3d84fb1cba4c2de1bb99c43098b785d61.
+
+Signed-off-by: Vitaliy Sochnev <sochnev.v.74@gmail.com>
+---
+--- a/Documentation/devicetree/bindings/cpufreq/airoha,en7581-cpufreq.yaml
++++ b/Documentation/devicetree/bindings/cpufreq/airoha,en7581-cpufreq.yaml
+@@ -23,9 +23,25 @@
+   CPUs can't be individually scaled as the CPU frequency is shared across
+   all CPUs and is global.
+ 
++  Boards with firmware lacking the AVS SMC interface can instead expose
++  the EN7581 CPU PLL and MCU clock mux registers. This mode retains the
++  boot voltage and only supports an initial CPU rate of 1200 MHz.
++
+ properties:
+   compatible:
+-    const: airoha,en7581-cpufreq
++    enum:
++      - airoha,en7581-cpufreq
++      - airoha,en7581-cpufreq-pll
++
++  reg:
++    items:
++      - description: Chip SCU registers
++      - description: MCU configuration registers
++
++  reg-names:
++    items:
++      - const: chip-scu
++      - const: mcucfg
+ 
+   '#clock-cells':
+     const: 0
+@@ -35,6 +51,20 @@
+ 
+   operating-points-v2: true
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          const: airoha,en7581-cpufreq-pll
++    then:
++      required:
++        - reg
++        - reg-names
++    else:
++      properties:
++        reg: false
++        reg-names: false
++
+ required:
+   - compatible
+   - '#clock-cells'
+--- a/drivers/pmdomain/mediatek/airoha-cpu-pmdomain.c
++++ b/drivers/pmdomain/mediatek/airoha-cpu-pmdomain.c
+@@ -3,10 +3,14 @@
+ #include <linux/arm-smccc.h>
+ #include <linux/bitfield.h>
+ #include <linux/clk-provider.h>
++#include <linux/cpu.h>
++#include <linux/delay.h>
++#include <linux/io.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_domain.h>
+ #include <linux/slab.h>
++#include <linux/stop_machine.h>
+ 
+ #define AIROHA_SIP_AVS_HANDLE			0x82000301
+ #define AIROHA_AVS_OP_BASE			0xddddddd0
+@@ -16,11 +20,130 @@
+ #define AIROHA_AVS_OP_GET_FREQ			(AIROHA_AVS_OP_BASE | \
+ 						 FIELD_PREP(AIROHA_AVS_OP_MASK, 0x2))
+ 
++#define EN7581_CPU_CLK_MUX			0x1e0
++#define EN7581_PLL_PROTECT			0x268
++#define EN7581_CPU_PLL_PCW			0x2b4
++#define EN7581_CPU_PLL_PCW_MASK			GENMASK(31, 24)
++#define EN7581_CPU_PLL_CHG			0x2b8
++#define EN7581_CPU_PLL_POSTDIV			GENMASK(6, 4)
++#define EN7581_MCU_CLK_UNLOCK			0x640
++#define EN7581_MCU_CLK_SEL			0x7c0
++#define EN7581_MCU_CLK_SOURCE			GENMASK(10, 9)
++#define EN7581_MCU_CLK_DIVIDER			GENMASK(21, 17)
++#define EN7581_CPU_MAX_RATE			1200000000UL
++
+ struct airoha_cpu_pmdomain_priv {
+ 	struct clk_hw hw;
+ 	struct generic_pm_domain pd;
++	void __iomem *pll;
++	void __iomem *mcucfg;
+ };
+ 
++static unsigned long en7581_cpu_pll_rate(struct airoha_cpu_pmdomain_priv *priv)
++{
++	u32 sel = readl(priv->mcucfg + EN7581_MCU_CLK_SEL);
++	u32 pcw = readl(priv->pll + EN7581_CPU_PLL_PCW);
++	u32 chg = readl(priv->pll + EN7581_CPU_PLL_CHG);
++
++	if (sel & EN7581_MCU_CLK_DIVIDER)
++		return 0;
++	if (FIELD_GET(EN7581_MCU_CLK_SOURCE, sel) == 3)
++		return 400000000UL;
++	if (FIELD_GET(EN7581_MCU_CLK_SOURCE, sel) != 1)
++		return 0;
++
++	return FIELD_GET(EN7581_CPU_PLL_PCW_MASK, pcw) * 50000000UL >>
++		FIELD_GET(EN7581_CPU_PLL_POSTDIV, chg);
++}
++
++static bool en7581_cpu_pll_configure(struct airoha_cpu_pmdomain_priv *priv,
++				   u32 pcw, u32 chg)
++{
++	u32 toggle = (readl(priv->pll + EN7581_CPU_PLL_CHG) ^ BIT(0)) & BIT(0);
++
++	writel(pcw, priv->pll + EN7581_CPU_PLL_PCW);
++	chg = (chg & ~BIT(0)) | toggle;
++	writel(chg, priv->pll + EN7581_CPU_PLL_CHG);
++	udelay(20);
++
++	return readl(priv->pll + EN7581_CPU_PLL_PCW) == pcw &&
++	       !((readl(priv->pll + EN7581_CPU_PLL_CHG) ^ chg) &
++		 (EN7581_CPU_PLL_POSTDIV | BIT(0)));
++}
++
++struct en7581_cpu_pll_request {
++	struct airoha_cpu_pmdomain_priv *priv;
++	unsigned long rate;
++};
++
++static int en7581_cpu_pll_update(void *data)
++{
++	struct en7581_cpu_pll_request *req = data;
++	struct airoha_cpu_pmdomain_priv *priv = req->priv;
++	u32 old_sel = readl(priv->mcucfg + EN7581_MCU_CLK_SEL);
++	u32 old_mux = readl(priv->pll + EN7581_CPU_CLK_MUX);
++	u32 old_unlock = readl(priv->mcucfg + EN7581_MCU_CLK_UNLOCK);
++	u32 old_protect = readl(priv->pll + EN7581_PLL_PROTECT);
++	u32 old_pcw = readl(priv->pll + EN7581_CPU_PLL_PCW);
++	u32 old_chg = readl(priv->pll + EN7581_CPU_PLL_CHG);
++	u32 pcw, chg, sel;
++	bool restored;
++	int ret = 0;
++
++	if ((old_sel & EN7581_MCU_CLK_DIVIDER) ||
++	    FIELD_GET(EN7581_MCU_CLK_SOURCE, old_sel) != 1)
++		return -EINVAL;
++
++	/* All other CPUs are stopped before the shared clock leaves ARMPLL. */
++	writel(old_mux | BIT(2), priv->pll + EN7581_CPU_CLK_MUX);
++	if (!(readl(priv->pll + EN7581_CPU_CLK_MUX) & BIT(2)))
++		return -EIO;
++	writel((old_unlock & ~0x1f) | 0x12,
++	       priv->mcucfg + EN7581_MCU_CLK_UNLOCK);
++	udelay(1);
++	sel = (old_sel & ~EN7581_MCU_CLK_SOURCE) |
++	      FIELD_PREP(EN7581_MCU_CLK_SOURCE, 3);
++	writel(sel, priv->mcucfg + EN7581_MCU_CLK_SEL);
++	if (FIELD_GET(EN7581_MCU_CLK_SOURCE,
++		      readl(priv->mcucfg + EN7581_MCU_CLK_SEL)) != 3) {
++		ret = -EIO;
++		goto restore_source;
++	}
++
++	writel((old_protect & ~0xff) | 0x12, priv->pll + EN7581_PLL_PROTECT);
++	pcw = old_pcw & ~EN7581_CPU_PLL_PCW_MASK;
++	chg = old_chg & ~EN7581_CPU_PLL_POSTDIV;
++	if (req->rate < 1000000000UL) {
++		pcw |= FIELD_PREP(EN7581_CPU_PLL_PCW_MASK, req->rate / 25000000UL);
++		chg |= FIELD_PREP(EN7581_CPU_PLL_POSTDIV, 1);
++	} else {
++		pcw |= FIELD_PREP(EN7581_CPU_PLL_PCW_MASK, req->rate / 50000000UL);
++	}
++
++	if (!en7581_cpu_pll_configure(priv, pcw, chg)) {
++		ret = -EIO;
++		restored = en7581_cpu_pll_configure(priv, old_pcw, old_chg);
++		writel(old_protect, priv->pll + EN7581_PLL_PROTECT);
++		/* Keep the 400 MHz backup running if ARMPLL cannot be restored. */
++		if (!restored)
++			return ret;
++	} else {
++		writel(old_protect, priv->pll + EN7581_PLL_PROTECT);
++	}
++
++restore_source:
++	writel(old_sel, priv->mcucfg + EN7581_MCU_CLK_SEL);
++	if (FIELD_GET(EN7581_MCU_CLK_SOURCE,
++		      readl(priv->mcucfg + EN7581_MCU_CLK_SEL)) != 1)
++		return -EIO;
++	writel(old_mux, priv->pll + EN7581_CPU_CLK_MUX);
++	writel(old_unlock, priv->mcucfg + EN7581_MCU_CLK_UNLOCK);
++	if (!ret && en7581_cpu_pll_rate(priv) != req->rate)
++		return -EIO;
++
++	return ret;
++}
++
+ static int airoha_cpu_pmdomain_clk_determine_rate(struct clk_hw *hw,
+ 						  struct clk_rate_request *req)
+ {
+@@ -28,10 +151,15 @@
+ }
+ 
+ static unsigned long airoha_cpu_pmdomain_clk_get(struct clk_hw *hw,
+-						 unsigned long parent_rate)
++					     unsigned long parent_rate)
+ {
++	struct airoha_cpu_pmdomain_priv *priv =
++		container_of(hw, struct airoha_cpu_pmdomain_priv, hw);
+ 	struct arm_smccc_res res;
+ 
++	if (priv->pll)
++		return en7581_cpu_pll_rate(priv);
++
+ 	arm_smccc_1_1_invoke(AIROHA_SIP_AVS_HANDLE, AIROHA_AVS_OP_GET_FREQ,
+ 			     0, 0, 0, 0, 0, 0, &res);
+ 
+@@ -54,8 +182,30 @@
+ static int airoha_cpu_pmdomain_set_performance_state(struct generic_pm_domain *domain,
+ 						     unsigned int state)
+ {
++	struct airoha_cpu_pmdomain_priv *priv =
++		container_of(domain, struct airoha_cpu_pmdomain_priv, pd);
+ 	struct arm_smccc_res res;
+ 
++	if (priv->pll) {
++		struct en7581_cpu_pll_request req = {
++			.priv = priv,
++			.rate = 450000000UL + max(state, 1U) * 50000000UL,
++		};
++		int ret;
++
++		if (state > 15)
++			return -EINVAL;
++		if (en7581_cpu_pll_rate(priv) == req.rate)
++			return 0;
++
++		/* Hotplug may already own the write side of this lock. */
++		if (!cpus_read_trylock())
++			return -EBUSY;
++		ret = stop_machine_cpuslocked(en7581_cpu_pll_update, &req, NULL);
++		cpus_read_unlock();
++		return ret;
++	}
++
+ 	arm_smccc_1_1_invoke(AIROHA_SIP_AVS_HANDLE, AIROHA_AVS_OP_FREQ_DYN_ADJ,
+ 			     0, state, 0, 0, 0, 0, &res);
+ 
+@@ -80,6 +230,20 @@
+ 	if (!priv)
+ 		return -ENOMEM;
+ 
++	if (device_is_compatible(dev, "airoha,en7581-cpufreq-pll")) {
++		priv->pll = devm_platform_ioremap_resource(pdev, 0);
++		if (IS_ERR(priv->pll))
++			return PTR_ERR(priv->pll);
++		priv->mcucfg = devm_platform_ioremap_resource(pdev, 1);
++		if (IS_ERR(priv->mcucfg))
++			return PTR_ERR(priv->mcucfg);
++
++		/* Retain the boot voltage and never exceed the stock 1200 MHz. */
++		if (en7581_cpu_pll_rate(priv) != EN7581_CPU_MAX_RATE ||
++		    (readl(priv->pll + EN7581_CPU_PLL_PCW) & GENMASK(23, 0)))
++			return dev_err_probe(dev, -EINVAL, "unsupported initial CPU PLL rate\n");
++	}
++
+ 	/* Init and register a get-only clk for Cpufreq */
+ 	priv->hw.init = &init;
+ 	ret = devm_clk_hw_register(dev, &priv->hw);
+@@ -124,6 +288,7 @@
+ }
+ 
+ static const struct of_device_id airoha_cpu_pmdomain_of_match[] = {
++	{ .compatible = "airoha,en7581-cpufreq-pll" },
+ 	{ .compatible = "airoha,an7583-cpufreq" },
+ 	{ .compatible = "airoha,en7581-cpufreq" },
+ 	{ },

@@ -11,6 +11,102 @@
 	aliases {
 		label-mac-device = &gdm2;
 	};
+
+	cpu_pll: cpufreq@1fa20000 {
+		compatible = "airoha,en7581-cpufreq-pll";
+		reg = <0x0 0x1fa20000 0x0 0x388>,
+		      <0x0 0x1efbe000 0x0 0x800>;
+		reg-names = "chip-scu", "mcucfg";
+		operating-points-v2 = <&cpu_smcc_opp_table>;
+		#clock-cells = <0>;
+		#power-domain-cells = <0>;
+	};
+};
+
+/* The factory BL31 does not implement the CPU frequency SMC interface. */
+&cpufreq {
+	status = "disabled";
+};
+
+/* genpd reserves state zero for an inactive performance request. */
+&smcc_opp0 {
+	opp-level = <1>;
+};
+
+&smcc_opp1 {
+	opp-level = <2>;
+};
+
+&smcc_opp2 {
+	opp-level = <3>;
+};
+
+&smcc_opp3 {
+	opp-level = <4>;
+};
+
+&smcc_opp4 {
+	opp-level = <5>;
+};
+
+&smcc_opp5 {
+	opp-level = <6>;
+};
+
+&smcc_opp6 {
+	opp-level = <7>;
+};
+
+&smcc_opp7 {
+	opp-level = <8>;
+};
+
+&smcc_opp8 {
+	opp-level = <9>;
+};
+
+&smcc_opp9 {
+	opp-level = <10>;
+};
+
+&smcc_opp10 {
+	opp-level = <11>;
+};
+
+&smcc_opp11 {
+	opp-level = <12>;
+};
+
+&smcc_opp12 {
+	opp-level = <13>;
+};
+
+&smcc_opp13 {
+	opp-level = <14>;
+};
+
+&smcc_opp14 {
+	opp-level = <15>;
+};
+
+&cpu0 {
+	clocks = <&cpu_pll>;
+	power-domains = <&cpu_pll>;
+};
+
+&cpu1 {
+	clocks = <&cpu_pll>;
+	power-domains = <&cpu_pll>;
+};
+
+&cpu2 {
+	clocks = <&cpu_pll>;
+	power-domains = <&cpu_pll>;
+};
+
+&cpu3 {
+	clocks = <&cpu_pll>;
+	power-domains = <&cpu_pll>;
 };
 
 &en7581_pinctrl {
