@@ -133,6 +133,8 @@ platform_do_upgrade() {
 			fit_do_upgrade "$1"
 			;;
 		gemtek,xr1710g-ubi)
+			ubirmvol /dev/ubi0 -N config
+			ubirmvol /dev/ubi0 -N log
 			gemtek_prepare_factory
 			fit_do_upgrade "$1"
 			;;
